@@ -1,4 +1,4 @@
-import { myTokenModuleMyTokenAbi } from "../generated";
+import { tokenAbi } from "../generated";
 import { useWriteContract } from "wagmi";
 
 import { useState } from "react";
@@ -45,7 +45,7 @@ export function Mint(params: {
 
       <button onClick={() => writeContract({
         address: params.contractAddress,
-        abi: myTokenModuleMyTokenAbi,
+        abi: tokenAbi,
         functionName: "mint",
         args: [address, BigInt(amount) * (10n ** BigInt(params.decimals))]
       })} disabled={status === "pending"} className="

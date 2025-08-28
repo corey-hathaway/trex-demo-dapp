@@ -2,8 +2,8 @@ import { http, createConfig } from "@wagmi/core";
 import { type Chain } from "viem";
 import { metaMask } from "@wagmi/connectors";
 
-const passetHub = {
-  id: 420420422,
+const assetHub = {
+  id: 420420420,
   name: "Passet Hub",
   nativeCurrency: {
     name: "PAS",
@@ -12,15 +12,15 @@ const passetHub = {
   },
   rpcUrls: {
     default: {
-      http: ["https://testnet-passet-hub-eth-rpc.polkadot.io"]
+      http: ["http://localhost:8545"]
     }
   }
 } as const satisfies Chain;
 
 export const config = createConfig({
-  chains: [passetHub],
+  chains: [assetHub],
   transports: {
-    [passetHub.id]: http()
+    [assetHub.id]: http()
   },
   connectors: [metaMask({
     dappMetadata: {

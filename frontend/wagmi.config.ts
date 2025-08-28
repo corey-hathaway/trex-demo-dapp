@@ -5,10 +5,14 @@ import path from "path";
 
 let dirEntries: fs.Dirent[] = [];
 
-const deploymentsDir = path.join("..", "contracts", "ignition", "deployments");
+const deploymentsDir = path.join("..", "T-REX", "deployment");
+const artifactsDir = path.join("..", "T-REX", "artifacts-pvm", "contracts");
+
+let deploymentEntries: fs.Dirent[] = [];
+let artifactEntries: fs.Dirent[] = [];
 
 try {
-  dirEntries.push(
+  deploymentEntries.push(
     ...fs.readdirSync(deploymentsDir, { recursive: true, withFileTypes: true })
   );
 } catch (e: unknown) {
@@ -16,57 +20,115 @@ try {
     throw e;
   }
 
-  console.warn(`No contracts found in ${deploymentsDir}. Deploy one first.`);
+  console.warn(`No deployment files found in ${deploymentsDir}. Deploy contracts first.`);
   process.exit(1);
 }
 
-const deployedAddressesEntries = dirEntries.filter((entry) => entry.name === "deployed_addresses.json");
+try {
+  artifactEntries.push(
+    ...fs.readdirSync(artifactsDir, { recursive: true, withFileTypes: true })
+  );
+} catch (e: unknown) {
+  if (!(e instanceof Error && "code" in e && e.code === "ENOENT")) {
+    throw e;
+  }
 
-const artifactEntries = dirEntries.filter(
-  (entry) => entry.isFile() && entry.parentPath.includes("artifacts") && entry.name.endsWith(".json") && !entry.name.endsWith(".dbg.json")
+  console.warn(`No artifact files found in ${artifactsDir}. Compile contracts first.`);
+  process.exit(1);
+}
+
+const deployedAddressesEntries = deploymentEntries.filter((entry) => entry.isFile() && entry.name.endsWith(".json") && !entry.name.endsWith(".dbg.json"));
+
+const contractArtifacts = artifactEntries.filter(
+  (entry) => entry.isFile() && entry.name.endsWith(".json") && !entry.name.endsWith(".dbg.json")
 );
 
-if (artifactEntries.length === 0) {
-  console.warn(`No contracts found in ${deploymentsDir}. Deploy one first.`);
+if (contractArtifacts.length === 0) {
+  console.warn(`No contract artifacts found in ${artifactsDir}. Compile contracts first.`);
   process.exit(1);
 }
 
 const abisByContractName: Record<string, Abi> = {};
 
-for (const entry of artifactEntries) {
+for (const entry of contractArtifacts) {
   const fileContents = fs.readFileSync(path.join(entry.parentPath, entry.name), "utf-8");
-  const abi = JSON.parse(fileContents).abi as Abi;
-
-  abisByContractName[entry.name.replace(/\.json$/, "")] = abi;
+  const artifactData = JSON.parse(fileContents);
+  
+  if (artifactData.contractName) {
+    abisByContractName[artifactData.contractName] = artifactData.abi as Abi;
+    console.log(`Loaded ABI for contract: ${artifactData.contractName}`);
+  } else {
+    console.warn(`No contractName found in artifact: ${entry.name}`);
+  }
 }
 
 type ContractName = string;
 const deployedContracts: Record<ContractName, ContractConfig> = {};
 
-const chainIdRegex = /(chain-)(\d+)/;
+// Contract name mapping between deployment names and artifact contract names
+const contractNameMapping: Record<string, string> = {
+  "token": "Token",
+  "identityRegistry": "IdentityRegistry",
+  "identityRegistryStorage": "IdentityRegistryStorage", 
+  "trustedIssuersRegistry": "TrustedIssuersRegistry",
+  "claimTopicsRegistry": "ClaimTopicsRegistry",
+  "defaultCompliance": "ModularCompliance",
+  "agentManager": "AgentRole",
+  "tokenOID": "IdFactoryMock",
+  "claimIssuerContract": "ClaimIssuerContract"
+};
+
+// Extract chain ID from filename (e.g., "420420420.json" -> "420420420")
 for (const entry of deployedAddressesEntries) {
-  const chainId = entry.parentPath.match(chainIdRegex)?.[2];
-  if (!chainId) {
-    throw new Error(`chainId is missing in path ${entry.parentPath}`);
+  const chainId = entry.name.replace(/\.json$/, "");
+  if (!chainId || isNaN(parseInt(chainId))) {
+    throw new Error(`Invalid chain ID in filename: ${entry.name}`);
   }
+  
   const fileContents = fs.readFileSync(path.join(entry.parentPath, entry.name), "utf-8");
+  const deploymentData = JSON.parse(fileContents);
+  
+  // Verify chain ID in JSON content matches filename
+  if (deploymentData.chainId !== parseInt(chainId)) {
+    throw new Error(`Chain ID mismatch: filename ${chainId} vs JSON content ${deploymentData.chainId}`);
+  }
 
-  for (const [name, address] of Object.entries(JSON.parse(fileContents)) as [ContractName, `0x${string}`][]) {
+  // Process suite contracts from the deployment data
+  if (deploymentData.suite) {
+    console.log(`Processing suite contracts for chain ${chainId}:`, Object.keys(deploymentData.suite));
+    for (const [deploymentName, address] of Object.entries(deploymentData.suite) as [ContractName, `0x${string}`][]) {
+      // Map deployment name to artifact contract name
+      const artifactContractName = contractNameMapping[deploymentName];
+      if (!artifactContractName) {
+        console.warn(`No mapping found for deployment name ${deploymentName} in chain ${chainId}, skipping...`);
+        continue;
+      }
+      
+      console.log(`Mapping ${deploymentName} -> ${artifactContractName}`);
+      
+      const abi = abisByContractName[artifactContractName];
+      if (!abi) {
+        console.warn(`No ABI found for contract ${artifactContractName} (mapped from ${deploymentName}) in chain ${chainId}), skipping...`);
+        continue;
+      }
 
-    const abi = abisByContractName[name];
-    if (!abi) {
-      throw new Error(`Can't find abi for deployed contract ${name} in chain ${chainId}`);
+      if (!deployedContracts[deploymentName]) deployedContracts[deploymentName] = { name: deploymentName, abi, address: {} };
+      const addressMap = deployedContracts[deploymentName].address! as Record<number, `0x${string}`>;
+      addressMap[parseInt(chainId)] = address;
+      console.log(`Successfully mapped contract ${deploymentName} for chain ${chainId}`);
     }
-
-    if (!deployedContracts[name]) deployedContracts[name] = { name, abi, address: {} };
-    const addressMap = deployedContracts[name].address! as Record<number, `0x${string}`>;
-    addressMap[parseInt(chainId)] = address;
   }
 }
 
+// Debug logging
+console.log(`Found ${deploymentEntries.length} deployment entries`);
+console.log(`Found ${artifactEntries.length} artifact entries`);
+console.log(`Found ${deployedAddressesEntries.length} deployment address files`);
+console.log(`Found ${contractArtifacts.length} contract artifacts`);
+
 if (process.env.DEBUG === "1") {
   console.log("deployedAddressesEntries", deployedAddressesEntries);
-  console.log("artifactEntries", artifactEntries);
+  console.log("contractArtifacts", contractArtifacts);
   console.log("deployedAddresses", deployedContracts);
 }
 

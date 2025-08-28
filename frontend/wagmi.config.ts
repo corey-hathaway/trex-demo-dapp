@@ -5,7 +5,7 @@ import path from "path";
 
 let dirEntries: fs.Dirent[] = [];
 
-const deploymentsDir = path.join("..", "contracts", "ignition", "deployments");
+const deploymentsDir = path.join("..", "T-REX", "deployment");
 
 try {
   dirEntries.push(

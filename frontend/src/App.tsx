@@ -1,6 +1,11 @@
 import "./App.css";
 import polkadotLogo from "./assets/polkadot-logo.svg";
 import { TREXDashboard } from "./components/TREXDashboard";
+import { DeployToken } from "./components/DeployToken";
+import { FactoryDeployToken } from "./components/FactoryDeployToken";
+import { TokenOverview } from "./components/TokenOverview";
+import { DeploymentDebugger } from "./components/DeploymentDebugger";
+import { DirectDeployToken } from "./components/DirectDeployToken";
 import WalletConnect from "./components/WalletConnect";
 
 function App() {
@@ -16,8 +21,21 @@ function App() {
       <div className="container mx-auto p-4">
         <WalletConnect onConnect={handleWalletConnect} />
       </div>
+{/*}
+      <DirectDeployToken />
 
+
+      <DeploymentDebugger />
+
+
+      <TokenOverview />
+
+*/}
+      <DeployToken />
+      <TokenOverview />
+      {/* TREX Dashboard */}
       <TREXDashboard />
+      <FactoryDeployToken />
     </>
   );
 }

@@ -1,11 +1,7 @@
 import "./App.css";
 import polkadotLogo from "./assets/polkadot-logo.svg";
 import { TREXDashboard } from "./components/TREXDashboard";
-import { DeployToken } from "./components/DeployToken";
-import { FactoryDeployToken } from "./components/FactoryDeployToken";
 import { TokenOverview } from "./components/TokenOverview";
-import { DeploymentDebugger } from "./components/DeploymentDebugger";
-import { DirectDeployToken } from "./components/DirectDeployToken";
 import { TrustedIssuersDeployment } from "./components/TrustedIssuersDeployment";
 import { ClaimTopicsDeployment } from "./components/ClaimTopicsDeployment";
 import { IdentityStorageDeployment } from "./components/IdentityStorageDeployment";
@@ -107,15 +103,7 @@ function App() {
       </div>
 
       <TokenOverview />
-      {/* Other Components (Commented for focus on wizard) */}
-      {/*
-      <DirectDeployToken />
-      <DeploymentDebugger />
-      <DeployToken />
-      <TokenOverview />
       <TREXDashboard />
-      <FactoryDeployToken />
-      */}
     </>
   );
 }

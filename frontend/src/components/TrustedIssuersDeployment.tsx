@@ -104,8 +104,44 @@ export function TrustedIssuersDeployment() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Deploy TrustedIssuersRegistry Proxy</h2>
+    <div className="max-w-2xl mx-auto mb-8">
+      {/* Step Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-t-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold">Step 1 of 5: TrustedIssuers Registry</h2>
+            <p className="text-blue-100">Foundation contract for claim issuer management</p>
+          </div>
+          <div className="bg-white text-blue-600 rounded-full w-10 h-10 flex items-center justify-center font-bold">
+            1
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border-l border-r border-blue-200 p-6">
+        {/* Prerequisites Section */}
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+          <h3 className="font-medium text-yellow-800">Prerequisites:</h3>
+          <ul className="text-yellow-700 text-sm mt-1">
+            <li>• Wallet connected to chain 420420420</li>
+            <li>• Sufficient ETH balance for gas fees</li>
+            <li>• Implementation Authority deployed: 0x867fb...6F</li>
+          </ul>
+        </div>
+
+        {/* Contract Purpose Explanation */}
+        <div className="bg-gray-50 rounded-md p-4 mb-4">
+          <h3 className="font-medium text-gray-800 mb-2">What this contract does:</h3>
+          <p className="text-gray-600 text-sm mb-2">
+            The TrustedIssuers Registry manages which entities are authorized to issue 
+            claims for token holders. Only trusted issuers can verify identity, 
+            accreditation, or compliance status.
+          </p>
+          <p className="text-gray-600 text-sm">
+            <span className="font-medium">Example issuers:</span> KYC providers, 
+            accreditation authorities, compliance services, regulatory bodies.
+          </p>
+        </div>
       
       {/* Connection Status */}
       {!userAddress && (
@@ -114,15 +150,15 @@ export function TrustedIssuersDeployment() {
         </div>
       )}
 
-      {/* Chain Info */}
-      {userAddress && chainId && (
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-          <p className="text-blue-800">
-            <span className="font-medium">Connected:</span> {userAddress} | 
-            <span className="font-medium"> Chain:</span> {chainId}
-          </p>
-        </div>
-      )}
+        {/* Chain Info */}
+        {userAddress && chainId && (
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+            <p className="text-blue-800">
+              <span className="font-medium">Connected:</span> {userAddress} | 
+              <span className="font-medium"> Chain:</span> {chainId}
+            </p>
+          </div>
+        )}
       
       {/* Form Step */}
       {step === 'form' && (
@@ -174,7 +210,7 @@ export function TrustedIssuersDeployment() {
                 ? 'Connect Wallet First' 
                 : isPending 
                   ? 'Deploying...' 
-                  : 'Deploy TrustedIssuersRegistry'
+                  : 'Deploy TrustedIssuers Registry'
               }
             </button>
           </form>
@@ -242,14 +278,16 @@ export function TrustedIssuersDeployment() {
             </div>
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
-            <h4 className="font-medium text-yellow-900 mb-2">⚠️ Next Steps</h4>
-            <ul className="text-sm text-yellow-800 text-left space-y-1">
-              <li>• Add trusted claim issuers to this registry</li>
-              <li>• Configure claim topics for your token requirements</li>
-              <li>• Use this address when deploying tokens that need trusted issuers</li>
-            </ul>
-          </div>
+                      {/* Next Steps Guidance */}
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+              <h4 className="font-medium text-blue-900 mb-2">✅ Next Steps:</h4>
+              <ul className="text-blue-800 text-sm text-left space-y-1">
+                <li>• Copy the deployed contract address above</li>
+                <li>• Proceed to Step 2: ClaimTopics Registry deployment</li>
+                <li>• You'll need this TrustedIssuers address when deploying IdentityRegistry</li>
+                <li>• After complete setup, add trusted claim issuers to this registry</li>
+              </ul>
+            </div>
 
           <button
             onClick={resetForm}
@@ -300,6 +338,21 @@ export function TrustedIssuersDeployment() {
           </div>
         </div>
       )}
+      </div>
+
+      {/* Progress Footer */}
+      <div className="bg-gray-50 border border-t-0 border-blue-200 rounded-b-lg p-4">
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>Progress: Step 1 of 5</span>
+          <div className="flex space-x-1">
+            <div className="w-8 h-2 bg-blue-500 rounded" title="Step 1: TrustedIssuers (Current)"></div>
+            <div className="w-8 h-2 bg-gray-200 rounded" title="Step 2: ClaimTopics"></div>
+            <div className="w-8 h-2 bg-gray-200 rounded" title="Step 3: IdentityStorage"></div>
+            <div className="w-8 h-2 bg-gray-200 rounded" title="Step 4: IdentityRegistry"></div>
+            <div className="w-8 h-2 bg-gray-200 rounded" title="Step 5: Token"></div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

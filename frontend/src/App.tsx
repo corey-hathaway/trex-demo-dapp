@@ -6,6 +6,7 @@ import { FactoryDeployToken } from "./components/FactoryDeployToken";
 import { TokenOverview } from "./components/TokenOverview";
 import { DeploymentDebugger } from "./components/DeploymentDebugger";
 import { DirectDeployToken } from "./components/DirectDeployToken";
+import { TrustedIssuersDeployment } from "./components/TrustedIssuersDeployment";
 import WalletConnect from "./components/WalletConnect";
 
 function App() {
@@ -31,6 +32,9 @@ function App() {
       <TokenOverview />
 
 */}
+      {/* TrustedIssuers Deployment Component */}
+      <TrustedIssuersDeployment />
+
       <DeployToken />
       <TokenOverview />
       {/* TREX Dashboard */}

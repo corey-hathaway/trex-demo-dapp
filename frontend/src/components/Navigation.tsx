@@ -9,18 +9,12 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChang
   return (
     <nav className="main-navigation">
       <div className="nav-container">
-        <div className="nav-brand">
+        <div className="nav-brand" onClick={() => onPageChange('home')}>
           <span className="brand-icon">🚀</span>
           <span className="brand-text">T-REX Deployer</span>
         </div>
         
         <div className="nav-menu">
-          <button
-            className={`nav-item ${currentPage === 'home' ? 'active' : ''}`}
-            onClick={() => onPageChange('home')}
-          >
-            Home
-          </button>
           <button
             className={`nav-item ${currentPage === 'deployment' ? 'active' : ''}`}
             onClick={() => onPageChange('deployment')}

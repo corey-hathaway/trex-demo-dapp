@@ -12,7 +12,7 @@ interface TokenData {
 }
 
 export const Dashboard: React.FC = () => {
-  const { address: userAddress } = useAccount();
+  const { address } = useAccount();
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

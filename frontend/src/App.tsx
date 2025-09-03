@@ -3,6 +3,7 @@ import polkadotLogo from "./assets/polkadot-logo.svg";
 import { Navigation } from "./components/Navigation";
 import { DeploymentWizard } from "./components/DeploymentWizard";
 import { Dashboard } from "./components/Dashboard";
+import { Footer } from "./components/Footer";
 import WalletConnect from "./components/WalletConnect";
 import { useState } from "react";
 
@@ -121,6 +122,9 @@ function App() {
           <Dashboard />
         </div>
       )}
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

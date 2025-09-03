@@ -1,110 +1,127 @@
 import "./App.css";
 import polkadotLogo from "./assets/polkadot-logo.svg";
-import { TREXDashboard } from "./components/TREXDashboard";
-import { TokenOverview } from "./components/TokenOverview";
-import { TrustedIssuersDeployment } from "./components/TrustedIssuersDeployment";
-import { ClaimTopicsDeployment } from "./components/ClaimTopicsDeployment";
-import { IdentityStorageDeployment } from "./components/IdentityStorageDeployment";
-import { IdentityRegistryDeployment } from "./components/IdentityRegistryDeployment";
-import { DefaultComplianceDeployment } from "./components/DefaultComplianceDeployment";
-import { TokenDeployment } from "./components/TokenDeployment";
+import { Navigation } from "./components/Navigation";
+import { DeploymentWizard } from "./components/DeploymentWizard";
+import { Dashboard } from "./components/Dashboard";
 import WalletConnect from "./components/WalletConnect";
+import { useState } from "react";
 
 function App() {
+  const [currentPage, setCurrentPage] = useState<'home' | 'deployment' | 'dashboard'>('home');
+  
   const handleWalletConnect = (address: string) => {
     console.log('Wallet connected:', address);
   };
 
+  const handlePageChange = (page: 'home' | 'deployment' | 'dashboard') => {
+    setCurrentPage(page);
+  };
+
   return (
-    <>
-      <img src={polkadotLogo} className="mx-auto h-52	p-4 logo" alt="Polkadot logo" />
+    <div className="app-container">
+      {/* Navigation */}
+      <Navigation currentPage={currentPage} onPageChange={handlePageChange} />
       
-      {/* Wallet Connection Component */}
-      <div className="container mx-auto p-4">
-        <WalletConnect onConnect={handleWalletConnect} />
-      </div>
-
-      {/* T-REX Individual Contract Deployment (Step by Step) */}
-      <div className="max-w-4xl mx-auto p-6">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">T-REX Contract Deployment Wizard</h1>
-        
-        {/* Deployment Overview */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-blue-900">Deployment Sequence Overview</h2>
-          <p className="text-blue-700 mb-4 text-sm">
-            Deploy T-REX contracts individually to reduce gas costs and enable better debugging. 
-            Follow the sequence below to ensure proper dependencies.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-            <div className="text-center">
-              <div className="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-2">
-                <span className="text-blue-600 font-bold">1</span>
-              </div>
-              <p className="text-sm text-blue-800 font-medium">TrustedIssuers Registry</p>
-              <p className="text-xs text-blue-600">Foundation contract</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-purple-100 rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-2">
-                <span className="text-purple-600 font-bold">2</span>
-              </div>
-              <p className="text-sm text-purple-800 font-medium">ClaimTopics Registry</p>
-              <p className="text-xs text-purple-600">Claim requirements</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-green-100 rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-2">
-                <span className="text-green-600 font-bold">3</span>
-              </div>
-              <p className="text-sm text-green-800 font-medium">Identity Storage</p>
-              <p className="text-xs text-green-600">Data persistence</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-2">
-                <span className="text-orange-600 font-bold">4</span>
-              </div>
-              <p className="text-sm text-orange-800 font-medium">Identity Registry</p>
-              <p className="text-xs text-orange-600">Combines 1-3</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-red-100 rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-2">
-                <span className="text-red-600 font-bold">5</span>
-              </div>
-              <p className="text-sm text-red-800 font-medium">Default Compliance</p>
-              <p className="text-xs text-red-600">Simple rules</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-purple-100 rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-2">
-                <span className="text-purple-600 font-bold">6</span>
-              </div>
-              <p className="text-sm text-purple-800 font-medium">Token Contract</p>
-              <p className="text-xs text-purple-600">Final deployment</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Individual Deployment Components */}
-        <TrustedIssuersDeployment />
-        <ClaimTopicsDeployment />
-        <IdentityStorageDeployment />
-        <IdentityRegistryDeployment />
-        <DefaultComplianceDeployment />
-        <TokenDeployment />
-
-        {/* Completion Message */}
-        <div className="max-w-2xl mx-auto mb-8">
-          <div className="bg-green-50 border border-green-300 rounded-lg p-6 text-center">
-            <div className="text-green-500 text-4xl mb-4">🎉</div>
-            <h3 className="text-lg font-semibold text-green-800 mb-2">T-REX Deployment Wizard Complete!</h3>
-            <p className="text-green-700 text-sm">
-              You now have access to all 6 components needed to deploy a complete T-REX security token infrastructure.
-              Follow the steps above in sequence to deploy your ERC-3643 compliant token.
+      {/* Page Content */}
+      {currentPage === 'home' && (
+        <>
+          {/* Hero Section */}
+          <section className="hero-section">
+            <img src={polkadotLogo} className="logo mx-auto h-32 p-4" alt="Polkadot logo" />
+            <h1 className="hero-title">T-REX Contract Deployment</h1>
+            <p className="hero-subtitle">
+              Deploy ERC-3643 compliant security tokens on Polkadot with Tokeny's regulatory framework
             </p>
-          </div>
-        </div>
-      </div>
+            
+            {/* Wallet Connection Component */}
+            <div className="container mx-auto p-4">
+              <WalletConnect onConnect={handleWalletConnect} />
+            </div>
+          </section>
 
-      <TokenOverview />
-      <TREXDashboard />
-    </>
+          {/* Main Content */}
+          <div className="container mx-auto px-6">
+            {/* Deployment Overview */}
+            <section className="modern-card">
+              <h2 className="section-title">Deployment Sequence</h2>
+              <p className="section-subtitle">
+                Deploy T-REX contracts individually to reduce gas costs and enable better debugging. 
+                Follow the sequence below to ensure proper dependencies.
+              </p>
+              
+              <div className="deployment-steps">
+                <div className="step-card">
+                  <div className="step-number">1</div>
+                  <h3 className="mb-2 text-lg font-semibold">TrustedIssuers Registry</h3>
+                  <p className="text-secondary-text text-sm">Foundation contract for managing trusted claim issuers</p>
+                </div>
+                <div className="step-card">
+                  <div className="step-number">2</div>
+                  <h3 className="mb-2 text-lg font-semibold">ClaimTopics Registry</h3>
+                  <p className="text-secondary-text text-sm">Manages claim topic requirements for compliance</p>
+                </div>
+                <div className="step-card">
+                  <div className="step-number">3</div>
+                  <h3 className="mb-2 text-lg font-semibold">Identity Storage</h3>
+                  <p className="text-secondary-text text-sm">Persistent storage for identity verification data</p>
+                </div>
+                <div className="step-card">
+                  <div className="step-number">4</div>
+                  <h3 className="mb-2 text-lg font-semibold">Identity Registry</h3>
+                  <p className="text-secondary-text text-sm">Combines all identity management components</p>
+                </div>
+                <div className="step-card">
+                  <div className="step-number">5</div>
+                  <h3 className="mb-2 text-lg font-semibold">Default Compliance</h3>
+                  <p className="text-secondary-text text-sm">Simple compliance rules for your token</p>
+                </div>
+                <div className="step-card">
+                  <div className="step-number">6</div>
+                  <h3 className="mb-2 text-lg font-semibold">Token Contract</h3>
+                  <p className="text-secondary-text text-sm">Final ERC-3643 compliant token deployment</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Quick Actions */}
+            <section className="modern-card">
+              <div className="text-center">
+                <h2 className="section-title">Get Started</h2>
+                <p className="section-subtitle mb-6">
+                  Choose your next step to begin deploying T-REX contracts
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button 
+                    className="btn-primary"
+                    onClick={() => handlePageChange('deployment')}
+                  >
+                    Start Deployment
+                  </button>
+                  <button 
+                    className="btn-secondary"
+                    onClick={() => handlePageChange('dashboard')}
+                  >
+                    View Dashboard
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </>
+      )}
+
+      {currentPage === 'deployment' && (
+        <div className="container mx-auto px-6 py-8">
+          <DeploymentWizard />
+        </div>
+      )}
+
+      {currentPage === 'dashboard' && (
+        <div className="container mx-auto px-6 py-8">
+          <Dashboard />
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface NavigationProps {
-  currentPage: 'home' | 'deployment' | 'dashboard';
-  onPageChange: (page: 'home' | 'deployment' | 'dashboard') => void;
+  currentPage: 'home' | 'dashboard';
+  onPageChange: (page: 'home' | 'dashboard') => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) => {
@@ -10,17 +10,10 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChang
     <nav className="main-navigation">
       <div className="nav-container">
         <div className="nav-brand" onClick={() => onPageChange('home')}>
-          <span className="brand-icon">🚀</span>
-          <span className="brand-text">T-REX Deployer</span>
+          <span className="brand-text">TokenyDemoDApp</span>
         </div>
         
         <div className="nav-menu">
-          <button
-            className={`nav-item ${currentPage === 'deployment' ? 'active' : ''}`}
-            onClick={() => onPageChange('deployment')}
-          >
-            Deploy Contracts
-          </button>
           <button
             className={`nav-item ${currentPage === 'dashboard' ? 'active' : ''}`}
             onClick={() => onPageChange('dashboard')}

@@ -8,6 +8,13 @@ import { IdentityStorageDeployment } from "./components/IdentityStorageDeploymen
 import { IdentityRegistryDeployment } from "./components/IdentityRegistryDeployment";
 import { DefaultComplianceDeployment } from "./components/DefaultComplianceDeployment";
 import { TokenDeployment } from "./components/TokenDeployment";
+import { AgentManagement } from "./components/AgentManagement";
+import { ClaimIssuerManagement } from "./components/ClaimIssuerManagement";
+import { IdentityRegistration } from "./components/IdentityRegistration";
+import { ClaimTopicsManagement } from "./components/ClaimTopicsManagement";
+import { IssuerTopicAuthorization } from "./components/IssuerTopicAuthorization";
+import { UserSetupWizard } from "./components/UserSetupWizard";
+import { TokenMinting } from "./components/TokenMinting";
 import WalletConnect from "./components/WalletConnect";
 
 function App() {
@@ -89,21 +96,45 @@ function App() {
         <DefaultComplianceDeployment />
         <TokenDeployment />
 
+        {/* Agent Management (Post-Deployment) */}
+        <AgentManagement />
+
+        {/* Claim Issuer Management */}
+        <ClaimIssuerManagement />
+
+        {/* Claim Topics Management */}
+        <ClaimTopicsManagement />
+
+        {/* Issuer Topic Authorization */}
+        <IssuerTopicAuthorization />
+
+        {/* User Setup Wizard */}
+        <UserSetupWizard />
+
+        {/* Token Minting */}
+        <TokenMinting />
+
+        {/* Identity Registration 
+        <IdentityRegistration />
+        */}
+
         {/* Completion Message */}
         <div className="max-w-2xl mx-auto mb-8">
           <div className="bg-green-50 border border-green-300 rounded-lg p-6 text-center">
             <div className="text-green-500 text-4xl mb-4">🎉</div>
-            <h3 className="text-lg font-semibold text-green-800 mb-2">T-REX Deployment Wizard Complete!</h3>
+            <h3 className="text-lg font-semibold text-green-800 mb-2">T-REX Infrastructure Complete!</h3>
             <p className="text-green-700 text-sm">
-              You now have access to all 6 components needed to deploy a complete T-REX security token infrastructure.
-              Follow the steps above in sequence to deploy your ERC-3643 compliant token.
+              Deploy contracts in sequence (Steps 1-6), then add agents to manage your token.
+              Your ERC-3643 compliant T-REX token will be ready for secure transfers!
             </p>
           </div>
         </div>
       </div>
 
       <TokenOverview />
+  {/*}
       <TREXDashboard />
+  */}
     </>
   );
 }

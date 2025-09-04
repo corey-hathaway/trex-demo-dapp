@@ -22,6 +22,12 @@ interface TokenInfo {
   compliance: string;
 }
 
+interface RegistryInfo {
+  trustedIssuersRegistry: string;
+  claimTopicsRegistry: string;
+  identityStorage: string;
+}
+
 interface TokenOverviewProps {
   tokenAddressOverride?: `0x${string}`;
 }
@@ -30,6 +36,7 @@ export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
   const { chainId } = useAccount();
   const [selectedTokenAddress, setSelectedTokenAddress] = useState<`0x${string}` | null>(null);
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
+  const [registryInfo, setRegistryInfo] = useState<RegistryInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,6 +99,30 @@ export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
     },
   });
 
+  // Read registry information from IdentityRegistry (if token info is available)
+  const { data: registryData, isError: registryError, isLoading: registryLoading } = useReadContracts({
+    contracts: [
+      {
+        address: tokenInfo?.identityRegistry as `0x${string}`,
+        abi: identityRegistryAbi,
+        functionName: 'issuersRegistry',
+      },
+      {
+        address: tokenInfo?.identityRegistry as `0x${string}`,
+        abi: identityRegistryAbi,
+        functionName: 'topicsRegistry',
+      },
+      {
+        address: tokenInfo?.identityRegistry as `0x${string}`,
+        abi: identityRegistryAbi,
+        functionName: 'identityStorage',
+      },
+    ],
+    query: {
+      enabled: !!tokenInfo?.identityRegistry,
+    },
+  });
+
   // Process contract data
   useEffect(() => {
     if (contractData && !isError && !contractLoading) {
@@ -138,6 +169,33 @@ export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
     
     setIsLoading(contractLoading);
   }, [contractData, isError, contractLoading, contractError]);
+
+  // Process registry data
+  useEffect(() => {
+    if (registryData && !registryError && !registryLoading) {
+      try {
+        const [
+          trustedIssuersResult,
+          claimTopicsResult,
+          identityStorageResult,
+        ] = registryData;
+
+        // Check if all calls were successful
+        const allSuccessful = registryData.every(result => result.status === 'success');
+        
+        if (allSuccessful) {
+          setRegistryInfo({
+            trustedIssuersRegistry: trustedIssuersResult.result as string,
+            claimTopicsRegistry: claimTopicsResult.result as string,
+            identityStorage: identityStorageResult.result as string,
+          });
+        }
+      } catch (err) {
+        console.warn('Error processing registry data:', err);
+        // Don't set error for registry data - it's supplementary information
+      }
+    }
+  }, [registryData, registryError, registryLoading]);
 
   // Handle token address input
   const handleTokenAddressChange = (address: string) => {
@@ -309,7 +367,34 @@ export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
                     {tokenInfo.compliance}
                   </p>
                 </div>
+                {registryInfo && (
+                  <>
+                    <div className="bg-white rounded-md p-3">
+                      <p className="text-sm font-medium text-gray-700 mb-1">TrustedIssuers Registry</p>
+                      <p className="font-mono text-xs text-gray-600 break-all">
+                        {registryInfo.trustedIssuersRegistry}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-md p-3">
+                      <p className="text-sm font-medium text-gray-700 mb-1">ClaimTopics Registry</p>
+                      <p className="font-mono text-xs text-gray-600 break-all">
+                        {registryInfo.claimTopicsRegistry}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-md p-3">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Identity Storage</p>
+                      <p className="font-mono text-xs text-gray-600 break-all">
+                        {registryInfo.identityStorage}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
+              {registryInfo && (
+                <div className="mt-3 text-xs text-gray-500">
+                  <p>💡 <span className="font-medium">Tip:</span> Copy the TrustedIssuers Registry address for use in Claim Issuer Management</p>
+                </div>
+              )}
             </div>
 
             {/* Network Information */}

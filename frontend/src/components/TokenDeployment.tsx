@@ -22,7 +22,11 @@ interface DeployedContract {
 
 type DeploymentStep = 'form' | 'deploying' | 'success' | 'error';
 
-export function TokenDeployment() {
+interface TokenDeploymentProps {
+  onComplete?: () => void;
+}
+
+export function TokenDeployment({ onComplete }: TokenDeploymentProps) {
   const { address: userAddress, chainId } = useAccount();
   const { deployContract, data: deployHash, error: deployError, isPending: isDeployPending } = useDeployContract();
   const { isLoading: isDeployConfirming, isSuccess: isDeploySuccess, data: deployReceipt } = useWaitForTransactionReceipt({ hash: deployHash });
@@ -133,6 +137,7 @@ export function TokenDeployment() {
       };
       setDeployedContract(deployed);
       setStep('success');
+      onComplete?.();
       console.log('TokenProxy deployment successful, contract address:', deployed.address);
     }
   }, [isDeploySuccess, deployReceipt, step]);

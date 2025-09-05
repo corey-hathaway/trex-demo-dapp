@@ -16,7 +16,12 @@ const WalletConnect = ({ onConnect }: { onConnect?: (address: string) => void })
 
   // Handle wallet connection
   const handleConnect = () => {
-    connect({ connector: metaMask() });
+    console.log('Attempting to connect wallet...');
+    try {
+      connect({ connector: metaMask() });
+    } catch (error) {
+      console.error('Wallet connection error:', error);
+    }
   };
 
   // Handle network switching
@@ -38,42 +43,61 @@ const WalletConnect = ({ onConnect }: { onConnect?: (address: string) => void })
     }
   }, [isConnected, address, onConnect]);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Wallet state:', { isConnected, address, chainId, connectError });
+  }, [isConnected, address, chainId, connectError]);
+
   return (
-    <div className="border border-pink-500 rounded-lg p-4 shadow-md bg-white text-pink-500 max-w-sm mx-auto">
+    <div className="wallet-connect-container">
       {connectError && (
-        <p className="text-red-500 text-sm mb-2">
-          {connectError.message || 'Failed to connect wallet'}
-        </p>
+        <div className="wallet-error">
+          <p>{connectError.message || 'Failed to connect wallet'}</p>
+          <p className="error-help">
+            Make sure you have MetaMask installed and try again.
+          </p>
+        </div>
       )}
 
       {!isConnected ? (
-        <button
-          onClick={handleConnect}
-          disabled={isConnecting}
-          className="w-full bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300 text-white font-bold py-2 px-4 rounded-lg transition"
-        >
-          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-        </button>
-      ) : (
-        <div className="flex flex-col items-center">
-          <span className="text-sm font-mono bg-pink-100 px-2 py-1 rounded-md text-pink-700">
-            {`${address?.substring(0, 6)}...${address?.substring(38)}`}
-          </span>
+        <div className="wallet-connect-section">
           <button
-            onClick={handleDisconnect}
-            className="mt-3 w-full bg-gray-200 hover:bg-gray-300 text-pink-500 py-2 px-4 rounded-lg transition"
+            onClick={handleConnect}
+            disabled={isConnecting}
+            className="btn-primary wallet-connect-btn"
           >
-            Disconnect
+            {isConnecting ? 'Connecting...' : 'Connect Wallet'}
           </button>
-          {chainId !== targetChainId && (
+          <p className="wallet-help">
+            Connect your MetaMask wallet to deploy contracts
+          </p>
+        </div>
+      ) : (
+        <div className="wallet-connected">
+          <div className="wallet-address">
+            <span className="address-label">Connected:</span>
+            <span className="address-value">
+              {`${address?.substring(0, 6)}...${address?.substring(38)}`}
+            </span>
+          </div>
+          
+          <div className="wallet-actions">
+            {chainId !== targetChainId && (
+              <button
+                onClick={handleSwitchNetwork}
+                disabled={isSwitching}
+                className="btn-secondary wallet-switch-btn"
+              >
+                {isSwitching ? 'Switching...' : `Switch to Chain ${targetChainId}`}
+              </button>
+            )}
             <button
-              onClick={handleSwitchNetwork}
-              disabled={isSwitching}
-              className="mt-3 w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-white font-bold py-2 px-4 rounded-lg transition"
+              onClick={handleDisconnect}
+              className="btn-secondary wallet-disconnect-btn"
             >
-              {isSwitching ? 'Switching...' : `Switch to Chain ${targetChainId}`}
+              Disconnect
             </button>
-          )}
+          </div>
         </div>
       )}
     </div>

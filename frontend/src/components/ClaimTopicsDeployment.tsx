@@ -16,7 +16,11 @@ interface DeployedContract {
 
 type DeploymentStep = 'form' | 'deploying' | 'success' | 'error';
 
-export function ClaimTopicsDeployment() {
+interface ClaimTopicsDeploymentProps {
+  onComplete?: () => void;
+}
+
+export function ClaimTopicsDeployment({ onComplete }: ClaimTopicsDeploymentProps) {
   const { address: userAddress, chainId } = useAccount();
   const { deployContract, data: hash, error: deployError, isPending } = useDeployContract();
   const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash });
@@ -88,6 +92,7 @@ export function ClaimTopicsDeployment() {
       };
       setDeployedContract(deployed);
       setStep('success');
+      onComplete?.();
     }
     
     if (deployError && step === 'deploying') {

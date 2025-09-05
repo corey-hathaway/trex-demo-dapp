@@ -16,7 +16,11 @@ interface DeployedContract {
 
 type DeploymentStep = 'form' | 'deploying' | 'success' | 'error';
 
-export function TrustedIssuersDeployment() {
+interface TrustedIssuersDeploymentProps {
+  onComplete?: () => void;
+}
+
+export function TrustedIssuersDeployment({ onComplete }: TrustedIssuersDeploymentProps) {
   const { address: userAddress, chainId } = useAccount();
   const { deployContract, data: hash, error: deployError, isPending } = useDeployContract();
   const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash });
@@ -88,6 +92,7 @@ export function TrustedIssuersDeployment() {
       };
       setDeployedContract(deployed);
       setStep('success');
+      onComplete?.();
     }
     
     if (deployError && step === 'deploying') {

@@ -103,10 +103,34 @@ export function UserSetupWizard() {
     country: 42
   });
 
-  // Transaction state
-  const { writeContract, data: txHash, isPending: isWritePending, error: writeError } = useWriteContract();
-  const { isLoading: isTxLoading, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
-    hash: txHash,
+  // Separate transaction hooks for different operations
+  const { 
+    writeContract: writeClaimContract, 
+    data: claimTxHash, 
+    isPending: isClaimPending, 
+    error: claimError 
+  } = useWriteContract();
+  
+  const { 
+    writeContract: writeRegistrationContract, 
+    data: registrationTxHash, 
+    isPending: isRegistrationPending, 
+    error: registrationError 
+  } = useWriteContract();
+
+  // Transaction confirmation hooks
+  const { 
+    isLoading: isClaimConfirming, 
+    isSuccess: isClaimSuccess 
+  } = useWaitForTransactionReceipt({
+    hash: claimTxHash,
+  });
+
+  const { 
+    isLoading: isRegistrationConfirming, 
+    isSuccess: isRegistrationSuccess 
+  } = useWaitForTransactionReceipt({
+    hash: registrationTxHash,
   });
 
   // UI state
@@ -299,93 +323,176 @@ export function UserSetupWizard() {
   const generateClaimSignature = async (identity: string, topic: string, data: string): Promise<string> => {
     // In a real implementation, this would use the claim issuer's private key
     // For PoC, we'll use a placeholder signature format
-    const encodedData = encodePacked(['address', 'uint256', 'bytes'], [identity as `0x${string}`, BigInt(topic), toBytes(data)]);
+    const encodedData = encodePacked(['address', 'uint256', 'bytes'], [identity as `0x${string}`, BigInt(topic), toBytes(data) as unknown as `0x${string}`]);
     const messageHash = keccak256(encodedData);
     
     // Return placeholder signature - in real implementation, sign with claim issuer private key
     return '0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
   };
 
-  // Issue claims for a specific user
+  // Issue a single claim (simplified approach)
+  const issueSingleClaim = async (user: UserEntry, topicHash: bigint): Promise<boolean> => {
+    const topicHashString = String(topicHash);
+    
+    return new Promise<boolean>((resolve) => {
+      // Update status to issuing
+      setClaimStatuses(prev => {
+        const existing = prev.find(s => s.userId === user.id && s.topicHash === topicHashString);
+        if (existing) {
+          return prev.map(s => s.userId === user.id && s.topicHash === topicHashString 
+            ? { ...s, status: 'issuing' as const } : s);
+        } else {
+          return [...prev, { userId: user.id, topicHash: topicHashString, status: 'issuing' as const }];
+        }
+      });
+
+      // Check if claim already exists (simplified)
+      // For PoC, skip the API check and just proceed with claim issuance
+      
+      // Generate claim data and signature
+      const claimData = `Verified for ${PREDEFINED_TOPICS.find(t => t.hash === topicHashString)?.name || 'CLAIM'}`;
+      
+      try {
+        // Submit the claim transaction - this should trigger wallet signature request
+        writeClaimContract({
+          address: user.identityAddress as `0x${string}`,
+          abi: identityImplementationAbi,
+          functionName: 'addClaim',
+          args: [
+            BigInt(topicHashString), // _topic
+            BigInt(1), // _scheme (ECDSA)
+            claimIssuerAddress as `0x${string}`, // _issuer
+            '0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`, // _signature (placeholder)
+            toBytes(claimData) as unknown as `0x${string}`, // _data
+            '' // _uri
+          ]
+        });
+
+        // Set up a timeout to resolve after reasonable time if no response
+        const timeout = setTimeout(() => {
+          console.log(`Claim transaction timed out for ${user.nickname}`);
+          setClaimStatuses(prev => prev.map(s => 
+            s.userId === user.id && s.topicHash === topicHashString
+              ? { ...s, status: 'failed' as const, error: 'Transaction timed out' }
+              : s
+          ));
+          resolve(false);
+        }, 60000); // 60 second timeout
+
+        // Monitor for success
+        const checkSuccess = () => {
+          if (isClaimSuccess && claimTxHash) {
+            clearTimeout(timeout);
+            setClaimStatuses(prev => prev.map(s => 
+              s.userId === user.id && s.topicHash === topicHashString
+                ? { ...s, status: 'issued' as const, transactionHash: claimTxHash }
+                : s
+            ));
+            console.log(`Claim issued successfully for ${user.nickname}:`, claimTxHash);
+            resolve(true);
+            return;
+          }
+          
+          if (claimError) {
+            clearTimeout(timeout);
+            setClaimStatuses(prev => prev.map(s => 
+              s.userId === user.id && s.topicHash === topicHashString
+                ? { ...s, status: 'failed' as const, error: String(claimError) }
+                : s
+            ));
+            console.log(`Claim failed for ${user.nickname}:`, claimError);
+            resolve(false);
+            return;
+          }
+          
+          // Continue checking
+          setTimeout(checkSuccess, 1000);
+        };
+        
+        // Start monitoring
+        setTimeout(checkSuccess, 1000); // Give wagmi a moment to process
+
+      } catch (error) {
+        setClaimStatuses(prev => prev.map(s => 
+          s.userId === user.id && s.topicHash === topicHashString
+            ? { ...s, status: 'failed' as const, error: String(error) }
+            : s
+        ));
+        resolve(false);
+      }
+    });
+  };
+
+  // Issue claims for a specific user (sequential with confirmation waiting)
   const issueClaimsForUser = async (user: UserEntry) => {
     if (!claimIssuerAddress || !availableTopics) return;
 
     try {
       setIsLoadingData(true);
+      let allSuccessful = true;
       
+      // Issue claims sequentially, waiting for each confirmation
       for (const topicHash of availableTopics as readonly bigint[]) {
-        const topicHashString = String(topicHash);
-        
-        // Update status to issuing
-        setClaimStatuses(prev => {
-          const existing = prev.find(s => s.userId === user.id && s.topicHash === topicHashString);
-          if (existing) {
-            return prev.map(s => s.userId === user.id && s.topicHash === topicHashString 
-              ? { ...s, status: 'issuing' as const } : s);
-          } else {
-            return [...prev, { userId: user.id, topicHash: topicHashString, status: 'issuing' as const }];
-          }
-        });
-
-        try {
-          // Check if claim already exists
-          const existingClaim = await fetch(`/api/identity/${user.identityAddress}/claim/${topicHashString}`).catch(() => null);
-          
-          if (existingClaim) {
-            // Claim already exists, mark as issued
-            setClaimStatuses(prev => prev.map(s => 
-              s.userId === user.id && s.topicHash === topicHashString
-                ? { ...s, status: 'issued' as const }
-                : s
-            ));
-            continue;
-          }
-
-          // Generate claim data and signature
-          const claimData = `Verified for ${PREDEFINED_TOPICS.find(t => t.hash === topicHashString)?.name || 'CLAIM'}`;
-          const signature = await generateClaimSignature(user.identityAddress, topicHashString, claimData);
-
-          // Issue the claim
-          await writeContract({
-            address: user.identityAddress as `0x${string}`,
-            abi: identityImplementationAbi,
-            functionName: 'addClaim',
-            args: [
-              BigInt(topicHashString), // _topic
-              1, // _scheme (ECDSA)
-              claimIssuerAddress as `0x${string}`, // _issuer
-              signature as `0x${string}`, // _signature
-              toBytes(claimData), // _data
-              '' // _uri
-            ]
-          });
-
-          // Mark as issued on success
-          setClaimStatuses(prev => prev.map(s => 
-            s.userId === user.id && s.topicHash === topicHashString
-              ? { ...s, status: 'issued' as const, transactionHash: txHash }
-              : s
-          ));
-
-        } catch (claimError) {
-          // Mark as failed
-          setClaimStatuses(prev => prev.map(s => 
-            s.userId === user.id && s.topicHash === topicHashString
-              ? { ...s, status: 'failed' as const, error: String(claimError) }
-              : s
-          ));
+        const success = await issueSingleClaim(user, topicHash);
+        if (!success) {
+          allSuccessful = false;
+          console.log(`Failed to issue claim ${topicHash} for ${user.nickname}`);
         }
+        
+        // Wait a bit between claims to avoid overwhelming the network
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
 
-      // Update user status
-      setUsers(prev => prev.map(u => 
-        u.id === user.id ? { ...u, status: 'claims_issued' as const } : u
-      ));
+      // Update user status based on overall success
+      if (allSuccessful) {
+        setUsers(prev => prev.map(u => 
+          u.id === user.id ? { ...u, status: 'claims_issued' as const } : u
+        ));
+        console.log(`Successfully issued all claims for ${user.nickname}`);
+      } else {
+        setError(`Some claims failed for ${user.nickname}. Check individual claim status.`);
+      }
 
     } catch (error) {
       setError(`Failed to issue claims for ${user.nickname}: ${String(error)}`);
     } finally {
       setIsLoadingData(false);
+    }
+  };
+
+  // Debug function to test wallet signature prompts
+  const testWalletSignature = () => {
+    console.log('Testing wallet signature prompt...');
+    console.log('Available topics:', availableTopics);
+    console.log('Claim issuer address:', claimIssuerAddress);
+    console.log('User address:', address);
+    console.log('Is connected:', isConnected);
+    
+    if (!claimIssuerAddress || !availableTopics) {
+      setError('Missing required addresses. Please set up contract addresses first.');
+      return;
+    }
+
+    // Try a simple claim transaction
+    const testUser = users[0];
+    if (testUser) {
+      const testTopic = (availableTopics as readonly bigint[])[0];
+      if (testTopic) {
+        console.log('Triggering test claim transaction...');
+        writeClaimContract({
+          address: testUser.identityAddress as `0x${string}`,
+          abi: identityImplementationAbi,
+          functionName: 'addClaim',
+          args: [
+            testTopic, // _topic
+            BigInt(1), // _scheme (ECDSA)
+            claimIssuerAddress as `0x${string}`, // _issuer
+            '0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`, // _signature (placeholder)
+            toBytes('Test claim data') as unknown as `0x${string}`, // _data
+            '' // _uri
+          ]
+        });
+      }
     }
   };
 
@@ -402,60 +509,127 @@ export function UserSetupWizard() {
     setSuccessMessage(`Claims issued for ${pendingUsers.length} users`);
   };
 
-  // Register users with identity registry
-  const registerUser = async (user: UserEntry) => {
-    if (!identityRegistryAddress) return;
+  // Register a single user with identity registry (simplified)
+  const registerUser = async (user: UserEntry): Promise<boolean> => {
+    if (!identityRegistryAddress) return false;
 
-    try {
-      await writeContract({
-        address: identityRegistryAddress as `0x${string}`,
-        abi: identityRegistryAbi,
-        functionName: 'registerIdentity',
-        args: [
-          user.walletAddress as `0x${string}`,
-          user.identityAddress as `0x${string}`,
-          user.country
-        ]
-      });
+    return new Promise<boolean>((resolve) => {
+      console.log(`Registering ${user.nickname} with identity registry...`);
+      
+      try {
+        // Submit registration transaction - should trigger wallet signature
+        writeRegistrationContract({
+          address: identityRegistryAddress as `0x${string}`,
+          abi: identityRegistryAbi,
+          functionName: 'registerIdentity',
+          args: [
+            user.walletAddress as `0x${string}`,
+            user.identityAddress as `0x${string}`,
+            user.country
+          ]
+        });
 
-      // Update user status on success
-      setUsers(prev => prev.map(u => 
-        u.id === user.id ? { ...u, status: 'registered' as const } : u
-      ));
+        // Set up timeout for transaction
+        const timeout = setTimeout(() => {
+          console.log(`Registration timed out for ${user.nickname}`);
+          setError(`Registration timed out for ${user.nickname}`);
+          resolve(false);
+        }, 60000); // 60 second timeout
 
-    } catch (error) {
-      setError(`Failed to register ${user.nickname}: ${String(error)}`);
-    }
+        // Monitor for success or failure
+        const checkResult = () => {
+          if (isRegistrationSuccess && registrationTxHash) {
+            clearTimeout(timeout);
+            setUsers(prev => prev.map(u => 
+              u.id === user.id ? { ...u, status: 'registered' as const } : u
+            ));
+            console.log(`Successfully registered ${user.nickname}:`, registrationTxHash);
+            resolve(true);
+            return;
+          }
+          
+          if (registrationError) {
+            clearTimeout(timeout);
+            setError(`Failed to register ${user.nickname}: ${String(registrationError)}`);
+            console.log(`Registration failed for ${user.nickname}:`, registrationError);
+            resolve(false);
+            return;
+          }
+          
+          // Continue checking
+          setTimeout(checkResult, 1000);
+        };
+        
+        // Start monitoring after a brief delay
+        setTimeout(checkResult, 1000);
+
+      } catch (error) {
+        setError(`Failed to register ${user.nickname}: ${String(error)}`);
+        resolve(false);
+      }
+    });
   };
 
-  // Register all users
+  // Register all users (sequential with confirmation waiting)
   const registerAllUsers = async () => {
     const usersToRegister = users.filter(u => u.status === 'claims_issued');
     
-    for (const user of usersToRegister) {
-      await registerUser(user);
-      // Small delay between registrations
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+    try {
+      setIsLoadingData(true);
+      let successCount = 0;
+      
+      for (const user of usersToRegister) {
+        const success = await registerUser(user);
+        if (success) {
+          successCount++;
+        }
+        // Longer delay between registrations to ensure proper sequencing
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
 
-    setSuccessMessage(`Registered ${usersToRegister.length} users with identity registry`);
-  };
-
-  // Handle transaction success
-  useEffect(() => {
-    if (isTxSuccess && txHash) {
-      setSuccessMessage('Transaction completed successfully!');
-      setTimeout(() => setSuccessMessage(''), 5000);
-    }
-  }, [isTxSuccess, txHash]);
-
-  // Handle write errors
-  useEffect(() => {
-    if (writeError) {
-      setError(`Transaction failed: ${(writeError as any).shortMessage || writeError.message}`);
+      if (successCount === usersToRegister.length) {
+        setSuccessMessage(`Successfully registered all ${successCount} users with identity registry`);
+      } else {
+        setSuccessMessage(`Registered ${successCount} out of ${usersToRegister.length} users. Check failed registrations.`);
+      }
+    } catch (error) {
+      setError(`Registration process failed: ${String(error)}`);
+    } finally {
       setIsLoadingData(false);
     }
-  }, [writeError]);
+  };
+
+  // Handle claim transaction success
+  useEffect(() => {
+    if (isClaimSuccess && claimTxHash) {
+      console.log('Claim transaction confirmed:', claimTxHash);
+      // Success handling is done in individual claim functions
+    }
+  }, [isClaimSuccess, claimTxHash]);
+
+  // Handle registration transaction success
+  useEffect(() => {
+    if (isRegistrationSuccess && registrationTxHash) {
+      console.log('Registration transaction confirmed:', registrationTxHash);
+      // Success handling is done in individual registration functions
+    }
+  }, [isRegistrationSuccess, registrationTxHash]);
+
+  // Handle claim errors
+  useEffect(() => {
+    if (claimError) {
+      setError(`Claim transaction failed: ${(claimError as any).shortMessage || claimError.message}`);
+      setIsLoadingData(false);
+    }
+  }, [claimError]);
+
+  // Handle registration errors
+  useEffect(() => {
+    if (registrationError) {
+      setError(`Registration transaction failed: ${(registrationError as any).shortMessage || registrationError.message}`);
+      setIsLoadingData(false);
+    }
+  }, [registrationError]);
 
   // Clear messages
   useEffect(() => {
@@ -884,13 +1058,21 @@ export function UserSetupWizard() {
           </div>
 
           {/* Bulk actions */}
-          <div className="mb-6">
+          <div className="mb-6 space-x-4">
             <button
               onClick={issueAllClaims}
-              disabled={isLoadingData || users.every(u => u.status !== 'pending')}
+              disabled={isLoadingData || isClaimPending || isClaimConfirming || users.every(u => u.status !== 'pending')}
               className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoadingData ? 'Issuing Claims...' : 'Issue All Claims'}
+              {isLoadingData || isClaimPending || isClaimConfirming ? 'Issuing Claims...' : 'Issue All Claims'}
+            </button>
+            
+            <button
+              onClick={testWalletSignature}
+              disabled={isLoadingData || isClaimPending || isClaimConfirming || users.length === 0}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm"
+            >
+              🔧 Test Wallet Signature
             </button>
           </div>
 
@@ -953,10 +1135,10 @@ export function UserSetupWizard() {
           <div className="mb-6">
             <button
               onClick={registerAllUsers}
-              disabled={isLoadingData || users.every(u => u.status !== 'claims_issued')}
+              disabled={isLoadingData || isRegistrationPending || isRegistrationConfirming || users.every(u => u.status !== 'claims_issued')}
               className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoadingData ? 'Registering Users...' : 'Register All Users'}
+              {isLoadingData || isRegistrationPending || isRegistrationConfirming ? 'Registering Users...' : 'Register All Users'}
             </button>
           </div>
 
@@ -1133,12 +1315,14 @@ export function UserSetupWizard() {
         </div>
       )}
 
-      {(isWritePending || isTxLoading || isLoadingData) && (
+      {(isClaimPending || isRegistrationPending || isClaimConfirming || isRegistrationConfirming || isLoadingData) && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
           <div className="text-blue-800 flex items-center">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-800 mr-2"></div>
-            {isWritePending && "Preparing transaction..."}
-            {isTxLoading && "Transaction confirming..."}
+            {isClaimPending && "Preparing claim transaction..."}
+            {isRegistrationPending && "Preparing registration transaction..."}
+            {isClaimConfirming && "Claim transaction confirming..."}
+            {isRegistrationConfirming && "Registration transaction confirming..."}
             {isLoadingData && "Processing..."}
           </div>
         </div>

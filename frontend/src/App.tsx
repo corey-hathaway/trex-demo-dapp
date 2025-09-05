@@ -42,7 +42,7 @@ function App() {
             Deploy T-REX contracts individually to reduce gas costs and enable better debugging. 
             Follow the sequence below to ensure proper dependencies.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
             <div className="text-center">
               <div className="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-2">
                 <span className="text-blue-600 font-bold">1</span>
@@ -83,7 +83,14 @@ function App() {
                 <span className="text-purple-600 font-bold">6</span>
               </div>
               <p className="text-sm text-purple-800 font-medium">Token Contract</p>
-              <p className="text-xs text-purple-600">Final deployment</p>
+              <p className="text-xs text-purple-600">Core deployment</p>
+            </div>
+            <div className="text-center">
+              <div className="bg-indigo-100 rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-2">
+                <span className="text-indigo-600 font-bold">7</span>
+              </div>
+              <p className="text-sm text-indigo-800 font-medium">Agent Manager</p>
+              <p className="text-xs text-indigo-600">Optional enhancement</p>
             </div>
           </div>
         </div>
@@ -96,9 +103,10 @@ function App() {
         <DefaultComplianceDeployment />
         <TokenDeployment />
 
-        {/* Agent Management (Post-Deployment) */}
+        {/* Step 7: Agent Manager Deployment (Following TREXFactory.ts pattern) */}
         <AgentManagement />
 
+        {/* Post-Deployment Configuration & Management */}
         {/* Claim Issuer Management */}
         <ClaimIssuerManagement />
 
@@ -111,6 +119,7 @@ function App() {
         {/* User Setup Wizard */}
         <UserSetupWizard />
 
+        {/* Token Operations */}
         {/* Token Minting */}
         <TokenMinting />
 
@@ -124,7 +133,8 @@ function App() {
             <div className="text-green-500 text-4xl mb-4">🎉</div>
             <h3 className="text-lg font-semibold text-green-800 mb-2">T-REX Infrastructure Complete!</h3>
             <p className="text-green-700 text-sm">
-              Deploy contracts in sequence (Steps 1-6), then add agents to manage your token.
+              Deploy contracts in sequence (Steps 1-7) following the TREXFactory.ts pattern.
+              Step 7 (Agent Manager) is optional but recommended for enhanced agent management.
               Your ERC-3643 compliant T-REX token will be ready for secure transfers!
             </p>
           </div>

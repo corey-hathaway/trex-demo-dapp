@@ -101,7 +101,7 @@ export function ClaimTopicsManagement() {
         address: claimTopicsRegistryAddress as `0x${string}`,
         abi: claimTopicsRegistryAbi,
         functionName: 'addClaimTopic',
-        args: [topic.hash as `0x${string}`]
+        args: [BigInt(topic.hash as `0x${string}`)]
       });
 
     } catch (error) {

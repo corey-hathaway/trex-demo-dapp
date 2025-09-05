@@ -98,7 +98,7 @@ export function ClaimIssuerManagement() {
         address: registryAddress as `0x${string}`,
         abi: trustedIssuersRegistryAbi,
         functionName: 'addTrustedIssuer',
-        args: [issuerAddress as `0x${string}`, selectedTopics]
+        args: [issuerAddress as `0x${string}`, selectedTopics.map(topic => BigInt(topic))]
       });
 
     } catch (error) {

@@ -106,7 +106,7 @@ const contractNameMapping: Record<string, string> = {
   "trustedIssuersRegistry": "TrustedIssuersRegistry",
   "claimTopicsRegistry": "ClaimTopicsRegistry",
   "defaultCompliance": "ModularCompliance",
-  "agentManager": "AgentRole",
+  "agentManager": "AgentManager",
   "tokenOID": "IdFactoryMock",
   "claimIssuerContract": "ClaimIssuer",
   "trexFactory": "TREXFactory",

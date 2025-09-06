@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useReadContracts, useAccount } from 'wagmi';
+import { useReadContracts, useAccount, useReadContract } from 'wagmi';
 import { 
   tokenAbi, 
   tokenAddress,
@@ -20,6 +20,13 @@ interface TokenInfo {
   paused: boolean;
   identityRegistry: string;
   compliance: string;
+  owner: string;
+}
+
+interface RegistryInfo {
+  trustedIssuersRegistry: string;
+  claimTopicsRegistry: string;
+  identityStorage: string;
 }
 
 interface TokenOverviewProps {
@@ -27,11 +34,18 @@ interface TokenOverviewProps {
 }
 
 export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
-  const { chainId } = useAccount();
+  const { chainId, address: userAddress } = useAccount();
   const [selectedTokenAddress, setSelectedTokenAddress] = useState<`0x${string}` | null>(null);
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
+  const [registryInfo, setRegistryInfo] = useState<RegistryInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [testAddresses] = useState<string[]>([
+    "0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac", // Deployer
+    "0x3452D27d07C7004007ac986cD3Efa3Ac36677680", // Alice
+    "0x234Ab1c08319e690b5B41652bf028C6Af85063c8", // Bob
+    "0x1da264b338befffD424eF64734D5f7689274E82B", // Charlie
+  ]);
 
   // Get current chain ID for address lookup
   const currentChainId = chainId || 420420420; // Default to Passet Hub testnet
@@ -86,9 +100,61 @@ export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
         ...tokenContract,
         functionName: 'compliance',
       },
+      {
+        ...tokenContract,
+        functionName: 'owner',
+      },
     ],
     query: {
       enabled: !!targetTokenAddress,
+    },
+  });
+
+  // Check if user is an agent
+  const { data: isUserAgent } = useReadContract({
+    address: targetTokenAddress,
+    abi: tokenAbi,
+    functionName: 'isAgent',
+    args: [userAddress as `0x${string}`],
+    query: {
+      enabled: !!targetTokenAddress && !!userAddress,
+    },
+  });
+
+  // Check agent status for test addresses
+  const { data: agentStatusData } = useReadContracts({
+    contracts: testAddresses.map(address => ({
+      address: targetTokenAddress,
+      abi: tokenAbi,
+      functionName: 'isAgent',
+      args: [address as `0x${string}`],
+    })),
+    query: {
+      enabled: !!targetTokenAddress,
+    },
+  });
+
+  // Read registry information from IdentityRegistry (if token info is available)
+  const { data: registryData, isError: registryError, isLoading: registryLoading } = useReadContracts({
+    contracts: [
+      {
+        address: tokenInfo?.identityRegistry as `0x${string}`,
+        abi: identityRegistryAbi,
+        functionName: 'issuersRegistry',
+      },
+      {
+        address: tokenInfo?.identityRegistry as `0x${string}`,
+        abi: identityRegistryAbi,
+        functionName: 'topicsRegistry',
+      },
+      {
+        address: tokenInfo?.identityRegistry as `0x${string}`,
+        abi: identityRegistryAbi,
+        functionName: 'identityStorage',
+      },
+    ],
+    query: {
+      enabled: !!tokenInfo?.identityRegistry,
     },
   });
 
@@ -106,6 +172,7 @@ export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
           pausedResult,
           identityRegistryResult,
           complianceResult,
+          ownerResult,
         ] = contractData;
 
         // Check if all calls were successful
@@ -122,6 +189,7 @@ export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
             paused: pausedResult.result as boolean,
             identityRegistry: identityRegistryResult.result as string,
             compliance: complianceResult.result as string,
+            owner: ownerResult.result as string,
           });
           setError(null);
         } else {
@@ -138,6 +206,33 @@ export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
     
     setIsLoading(contractLoading);
   }, [contractData, isError, contractLoading, contractError]);
+
+  // Process registry data
+  useEffect(() => {
+    if (registryData && !registryError && !registryLoading) {
+      try {
+        const [
+          trustedIssuersResult,
+          claimTopicsResult,
+          identityStorageResult,
+        ] = registryData;
+
+        // Check if all calls were successful
+        const allSuccessful = registryData.every(result => result.status === 'success');
+        
+        if (allSuccessful) {
+          setRegistryInfo({
+            trustedIssuersRegistry: trustedIssuersResult.result as string,
+            claimTopicsRegistry: claimTopicsResult.result as string,
+            identityStorage: identityStorageResult.result as string,
+          });
+        }
+      } catch (err) {
+        console.warn('Error processing registry data:', err);
+        // Don't set error for registry data - it's supplementary information
+      }
+    }
+  }, [registryData, registryError, registryLoading]);
 
   // Handle token address input
   const handleTokenAddressChange = (address: string) => {
@@ -309,6 +404,124 @@ export function TokenOverview({ tokenAddressOverride }: TokenOverviewProps) {
                     {tokenInfo.compliance}
                   </p>
                 </div>
+                {registryInfo && (
+                  <>
+                    <div className="bg-white rounded-md p-3">
+                      <p className="text-sm font-medium text-gray-700 mb-1">TrustedIssuers Registry</p>
+                      <p className="font-mono text-xs text-gray-600 break-all">
+                        {registryInfo.trustedIssuersRegistry}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-md p-3">
+                      <p className="text-sm font-medium text-gray-700 mb-1">ClaimTopics Registry</p>
+                      <p className="font-mono text-xs text-gray-600 break-all">
+                        {registryInfo.claimTopicsRegistry}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-md p-3">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Identity Storage</p>
+                      <p className="font-mono text-xs text-gray-600 break-all">
+                        {registryInfo.identityStorage}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              {registryInfo && (
+                <div className="mt-3 text-xs text-gray-500">
+                  <p>💡 <span className="font-medium">Tip:</span> Copy the TrustedIssuers Registry address for use in Claim Issuer Management</p>
+                </div>
+              )}
+            </div>
+
+            {/* Agent Management Section */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-800 mb-4">Access Control & Agents</h4>
+              
+              {/* Contract Owner */}
+              <div className="mb-4">
+                <div className="bg-white rounded-md p-4">
+                  <div className="flex items-center mb-2">
+                    <div className="bg-blue-100 rounded-full p-1 mr-2">
+                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <h5 className="text-sm font-medium text-gray-800">Contract Owner</h5>
+                  </div>
+                  <p className="font-mono text-xs text-gray-600 break-all mb-1">
+                    {tokenInfo.owner}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Has full administrative control over the token contract
+                  </p>
+                </div>
+              </div>
+
+              {/* Current User Agent Status */}
+              {userAddress && (
+                <div className="mb-4">
+                  <div className="bg-white rounded-md p-4">
+                    <div className="flex items-center mb-2">
+                      <div className={`w-3 h-3 rounded-full mr-2 ${isUserAgent ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <h5 className="text-sm font-medium text-gray-800">Your Agent Status</h5>
+                    </div>
+                    <p className="font-mono text-xs text-gray-600 break-all mb-1">
+                      {userAddress}
+                    </p>
+                    <p className={`text-xs ${isUserAgent ? 'text-green-600' : 'text-gray-500'}`}>
+                      {isUserAgent ? '✅ You are an agent - can mint tokens and manage the contract' : '❌ You are not an agent - limited permissions'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Known Addresses Agent Status */}
+              <div>
+                <h5 className="text-sm font-medium text-gray-800 mb-3">Agent Status Check</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {testAddresses.map((address, index) => {
+                    // @ts-ignore - Avoiding deep type instantiation issue
+                    const isAgent = agentStatusData?.[index]?.result === true;
+                    const isOwner = tokenInfo.owner.toLowerCase() === address.toLowerCase();
+                    
+                    const getAddressLabel = (addr: string) => {
+                      switch(addr) {
+                        case "0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac": return "Deployer";
+                        case "0x3452D27d07C7004007ac986cD3Efa3Ac36677680": return "Alice";
+                        case "0x234Ab1c08319e690b5B41652bf028C6Af85063c8": return "Bob";
+                        case "0x1da264b338befffD424eF64734D5f7689274E82B": return "Charlie";
+                        default: return "Unknown";
+                      }
+                    };
+
+                    return (
+                      <div key={address} className="bg-white rounded-md p-3">
+                        <div className="flex items-center mb-2">
+                          <div className={`w-3 h-3 rounded-full mr-2 ${isAgent ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          <span className="text-sm font-medium text-gray-800">
+                            {getAddressLabel(address)}
+                            {isOwner && <span className="ml-1 text-xs bg-blue-100 text-blue-800 px-1 rounded">OWNER</span>}
+                          </span>
+                        </div>
+                        <p className="font-mono text-xs text-gray-600 break-all mb-1">
+                          {address.substring(0, 10)}...{address.substring(32)}
+                        </p>
+                        <p className={`text-xs ${isAgent ? 'text-green-600' : 'text-gray-500'}`}>
+                          {isAgent ? 'Agent' : 'Not Agent'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-xs text-blue-700">
+                  <strong>Note:</strong> Agents can mint tokens, pause/unpause the contract, freeze addresses, and perform other administrative functions. 
+                  Use the Agent Management component above to add or remove agents.
+                </p>
               </div>
             </div>
 

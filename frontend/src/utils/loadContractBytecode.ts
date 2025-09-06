@@ -54,12 +54,23 @@ export const loadClaimTopicsRegistryProxyBytecode = async (): Promise<`0x${strin
   };
 
   export const loadTokenProxyBytecode = async (): Promise<`0x${string}`> => {
-    try {
-      // Dynamic import of the artifact JSON file
-      const artifact = await import('../../../T-REX/artifacts-pvm/contracts/proxy/TokenProxy.sol/TokenProxy.json');
-      return artifact.bytecode as `0x${string}`;
-    } catch (error) {
-      console.error('Failed to load TokenProxy bytecode:', error);
-      throw new Error('Contract bytecode not found');
-    }
-  };
+  try {
+    // Dynamic import of the artifact JSON file
+    const artifact = await import('../../../T-REX/artifacts-pvm/contracts/proxy/TokenProxy.sol/TokenProxy.json');
+    return artifact.bytecode as `0x${string}`;
+  } catch (error) {
+    console.error('Failed to load TokenProxy bytecode:', error);
+    throw new Error('Contract bytecode not found');
+  }
+};
+
+export const loadAgentManagerBytecode = async (): Promise<`0x${string}`> => {
+  try {
+    // Dynamic import of the AgentManager artifact JSON file
+    const artifact = await import('../../../T-REX/artifacts-pvm/contracts/roles/permissioning/agent/AgentManager.sol/AgentManager.json');
+    return artifact.bytecode as `0x${string}`;
+  } catch (error) {
+    console.error('Failed to load AgentManager bytecode:', error);
+    throw new Error('AgentManager bytecode not found');
+  }
+};

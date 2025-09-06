@@ -20,7 +20,13 @@ const assetHub = {
 export const config = createConfig({
   chains: [assetHub],
   transports: {
-    [assetHub.id]: http()
+    [assetHub.id]: http("http://localhost:8545", {
+      // Configure for local development with unlimited contract size
+      batch: false,
+      fetchOptions: {
+        timeout: 60000, // 60 seconds timeout for large contract deployments
+      }
+    })
   },
   connectors: [metaMask({
     dappMetadata: {

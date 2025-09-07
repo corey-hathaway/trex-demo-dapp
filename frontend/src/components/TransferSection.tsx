@@ -4,6 +4,8 @@ interface Token {
   address: string;
   name: string;
   symbol: string;
+  supply: string;
+  value: string;
 }
 
 interface TransferSectionProps {

@@ -48,7 +48,9 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
       setIsLoading(true);
       try {
         // Load tokens for the current wallet
+        console.log('Loading tokens for wallet:', walletAddress);
         const tokensResponse = await apiService.getTokensByOwner(walletAddress);
+        console.log('Tokens response:', tokensResponse);
         if (tokensResponse.success) {
           const formattedTokens: Token[] = tokensResponse.data.map((apiToken: ApiToken) => ({
             name: apiToken.name,
@@ -57,11 +59,14 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
             value: apiToken.value,
             address: apiToken.formattedAddress
           }));
+          console.log('Formatted tokens:', formattedTokens);
           setTokens(formattedTokens);
         }
 
         // Load all transactions
+        console.log('Loading transactions...');
         const transactionsResponse = await apiService.getTransactions();
+        console.log('Transactions response:', transactionsResponse);
         if (transactionsResponse.success) {
           const formattedTransactions: Transaction[] = transactionsResponse.data.map((apiTransaction: ApiTransaction) => ({
             type: apiTransaction.type,
@@ -71,6 +76,7 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
             timestamp: apiTransaction.timestamp,
             hash: apiTransaction.formattedHash
           }));
+          console.log('Formatted transactions:', formattedTransactions);
           setTransactions(formattedTransactions);
         }
       } catch (error) {

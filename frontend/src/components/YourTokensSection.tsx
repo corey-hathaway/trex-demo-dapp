@@ -19,32 +19,16 @@ export const YourTokensSection: React.FC<YourTokensSectionProps> = ({
   onViewToken, 
   onViewAll 
 }) => {
-  // Mock data for demonstration
-  const mockTokens: Token[] = [
-    {
-      name: 'Commercial Property',
-      symbol: 'CPL',
-      supply: '500',
-      value: '$500,000',
-      address: '0x742d...5E8a'
-    },
-    {
-      name: 'Real Estate Fund',
-      symbol: 'REF',
-      supply: '1000',
-      value: '$1,200,000',
-      address: '0x1234...5678'
-    }
-  ];
-
-  const displayTokens = tokens.length > 0 ? tokens : mockTokens;
+  console.log('YourTokensSection - tokens received:', tokens);
+  console.log('YourTokensSection - tokens.length:', tokens.length);
 
   return (
     <div className="homepage-section">
       <h3 className="section-header">Your Tokens</h3>
       
       <div className="tokens-list">
-        {displayTokens.map((token, index) => (
+        {tokens.length > 0 ? (
+          tokens.map((token, index) => (
           <div key={index} className="token-item">
             <div className="token-info">
               <div className="token-name">{token.name}</div>
@@ -59,7 +43,12 @@ export const YourTokensSection: React.FC<YourTokensSectionProps> = ({
               View
             </button>
           </div>
-        ))}
+          ))
+        ) : (
+          <div className="no-tokens-message">
+            <p>No tokens found. Create your first token using the Mint section above!</p>
+          </div>
+        )}
       </div>
       
       <button

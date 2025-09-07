@@ -2,9 +2,9 @@ import { http, createConfig } from "@wagmi/core";
 import { type Chain } from "viem";
 import { metaMask } from "@wagmi/connectors";
 
-const assetHub = {
+const paseoTestnet = {
   id: 420420420,
-  name: "Passet Hub",
+  name: "Paseo Testnet (Passet Hub)",
   nativeCurrency: {
     name: "PAS",
     symbol: "PAS",
@@ -12,25 +12,32 @@ const assetHub = {
   },
   rpcUrls: {
     default: {
-      http: ["http://localhost:8545"]
+      http: ["https://testnet-passet-hub.polkadot.io"],
+      webSocket: ["wss://paseo-rpc.dwellir.com"]
+    }
+  },
+  blockExplorers: {
+    default: {
+      name: "Passet Hub Explorer",
+      url: "https://blockscout-passet-hub.parity-testnet.parity.io"
     }
   }
 } as const satisfies Chain;
 
 export const config = createConfig({
-  chains: [assetHub],
+  chains: [paseoTestnet],
   transports: {
-    [assetHub.id]: http("http://localhost:8545", {
-      // Configure for local development with unlimited contract size
+    [paseoTestnet.id]: http("https://testnet-passet-hub.polkadot.io", {
+      // Configure for Paseo testnet with proper timeout for contract deployments
       batch: false,
       fetchOptions: {
-        timeout: 60000, // 60 seconds timeout for large contract deployments
+        timeout: 120000, // 2 minutes timeout for large contract deployments
       }
     })
   },
   connectors: [metaMask({
     dappMetadata: {
-      name: "create-polkadot-dapp"
+      name: "T-REX Demo dApp (Paseo Testnet)"
     }
   })]
 });

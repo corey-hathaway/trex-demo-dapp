@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import PolkadotAuth from './PolkadotAuth';
+import { NetworkStatus } from './NetworkStatus';
 
 interface NavigationProps {
   currentPage: 'home' | 'dashboard';
@@ -39,6 +40,11 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
         
         <div className="nav-right">
+          {/* Network Status */}
+          <div className="network-status">
+            <NetworkStatus />
+          </div>
+          
           {/* Wallet Status */}
           <div className="wallet-status">
             {walletAddress ? (

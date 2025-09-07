@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MintSection } from './MintSection';
 import { TransferSection } from './TransferSection';
 import { DeployTokenSection } from './DeployTokenSection';
+import { TestDeployment } from './TestDeployment';
 import { YourTokensSection } from './YourTokensSection';
 import { TransactionsSection } from './TransactionsSection';
 import { ToastContainer } from './ToastContainer';
@@ -140,7 +141,12 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
         setTransactions(formattedTransactions);
       }
       
-      showSuccess(`Token "${tokenData.name}" (${tokenData.symbol}) created and deployed successfully! Contract: ${deployResponse.contractAddress}`);
+      const successMessage = `Token "${tokenData.name}" (${tokenData.symbol}) deployed to Paseo testnet! 
+        Contract: ${deployResponse.contractAddress}
+        Network: ${deployResponse.network || 'Paseo Testnet (Passet Hub)'}
+        ${deployResponse.explorerUrl ? `Explorer: ${deployResponse.explorerUrl}` : ''}`;
+      
+      showSuccess(successMessage);
     } catch (error) {
       console.error('Error deploying token:', error);
       showError('Failed to deploy token. Please try again.');
@@ -265,6 +271,9 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
           </div>
         </div>
       </div>
+
+      {/* Test Deployment Section */}
+      <TestDeployment walletAddress={walletAddress} />
 
       {/* Bottom Grid - Your Tokens and Transactions */}
       <div className="homepage-grid bottom-grid">

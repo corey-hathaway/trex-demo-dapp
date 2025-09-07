@@ -324,6 +324,14 @@ RPC: ${networkInfo?.rpcUrl}`);
                       setDeploymentTestResult(null);
                       
                       try {
+                        // First check extension availability
+                        const extensionCheck = await polkadotTREXDeploymentService.checkExtensionAvailability();
+                        if (!extensionCheck.available) {
+                          setDeploymentTestResult(`❌ Extension Issue: ${extensionCheck.error}
+Available accounts: ${extensionCheck.accounts.length > 0 ? extensionCheck.accounts.join(', ') : 'None'}`);
+                          return;
+                        }
+
                         const deploymentResult = await polkadotTREXDeploymentService.deployTREXToken({
                           name: 'Test Token',
                           symbol: 'TEST',

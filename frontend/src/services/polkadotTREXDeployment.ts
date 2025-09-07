@@ -1,5 +1,5 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { web3FromAddress } from '@polkadot/extension-dapp';
+import { web3Enable, web3Accounts, web3FromAddress } from '@polkadot/extension-dapp';
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 
 // T-REX Factory deployment service using Polkadot.js Extension
@@ -29,6 +29,46 @@ export class PolkadotTREXDeploymentService {
   }
 
   /**
+   * Check if Polkadot.js Extension is available and has accounts
+   */
+  async checkExtensionAvailability(): Promise<{
+    available: boolean;
+    accounts: string[];
+    error?: string;
+  }> {
+    try {
+      const extensions = await web3Enable('T-REX Demo dApp');
+      if (extensions.length === 0) {
+        return {
+          available: false,
+          accounts: [],
+          error: 'No Polkadot.js Extension found. Please install it.'
+        };
+      }
+
+      const accounts = await web3Accounts();
+      if (!accounts || accounts.length === 0) {
+        return {
+          available: false,
+          accounts: [],
+          error: 'No accounts found in Polkadot.js Extension. Please add an account.'
+        };
+      }
+
+      return {
+        available: true,
+        accounts: accounts.map(acc => acc.address)
+      };
+    } catch (error) {
+      return {
+        available: false,
+        accounts: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
    * Deploy a T-REX token using the factory pattern with Polkadot.js Extension
    */
   async deployTREXToken(params: {
@@ -52,6 +92,12 @@ export class PolkadotTREXDeploymentService {
 
       console.log('🚀 Starting T-REX token deployment with Polkadot.js Extension...');
       console.log('Token params:', params);
+
+      // First check if extension is available
+      const extensionCheck = await this.checkExtensionAvailability();
+      if (!extensionCheck.available) {
+        throw new Error(extensionCheck.error || 'Polkadot.js Extension not available');
+      }
 
       // Get the injected account from the extension
       const injectedAccount = await this.getInjectedAccount(params.owner);
@@ -107,16 +153,29 @@ export class PolkadotTREXDeploymentService {
    */
   private async getInjectedAccount(address: string): Promise<InjectedAccountWithMeta | null> {
     try {
+      // Enable the extension
+      const extensions = await web3Enable('T-REX Demo dApp');
+      if (extensions.length === 0) {
+        throw new Error('No Polkadot.js Extension found. Please install it.');
+      }
+
       // Get all accounts from the extension
-      const accounts = await window.injectedWeb3?.['polkadot-js']?.accounts?.get();
-      
-      if (!accounts) {
+      const accounts = await web3Accounts();
+      if (!accounts || accounts.length === 0) {
         throw new Error('No accounts found in Polkadot.js Extension');
       }
 
+      console.log('Available accounts:', accounts.map(acc => acc.address));
+
       // Find the account that matches the provided address
       const account = accounts.find((acc: any) => acc.address === address);
-      return account || null;
+      if (!account) {
+        console.error('Account not found. Available accounts:', accounts.map(acc => acc.address));
+        console.error('Looking for address:', address);
+        throw new Error(`Account ${address} not found in Polkadot.js Extension`);
+      }
+
+      return account;
     } catch (error) {
       console.error('Failed to get injected account:', error);
       return null;

@@ -40,53 +40,54 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
   const [isTesting, setIsTesting] = useState(false);
   const { toasts, removeToast, showSuccess, showError } = useToast();
 
+  // Reusable function to load data
+  const loadData = async () => {
+    if (!walletAddress) return;
+    
+    setIsLoading(true);
+    try {
+      // Load tokens for the current wallet
+      console.log('Loading tokens for wallet:', walletAddress);
+      const tokensResponse = await apiService.getTokensByOwner(walletAddress);
+      console.log('Tokens response:', tokensResponse);
+      if (tokensResponse.success) {
+        const formattedTokens: Token[] = tokensResponse.data.map((apiToken: ApiToken) => ({
+          name: apiToken.name,
+          symbol: apiToken.symbol,
+          supply: apiToken.supply,
+          value: apiToken.value,
+          address: apiToken.formattedAddress
+        }));
+        console.log('Formatted tokens:', formattedTokens);
+        setTokens(formattedTokens);
+      }
+
+      // Load all transactions
+      console.log('Loading transactions...');
+      const transactionsResponse = await apiService.getTransactions();
+      console.log('Transactions response:', transactionsResponse);
+      if (transactionsResponse.success) {
+        const formattedTransactions: Transaction[] = transactionsResponse.data.map((apiTransaction: ApiTransaction) => ({
+          type: apiTransaction.type,
+          amount: apiTransaction.amount,
+          symbol: apiTransaction.token_symbol || apiTransaction.symbol || 'TOKEN',
+          recipient: apiTransaction.recipient,
+          timestamp: apiTransaction.timestamp,
+          hash: apiTransaction.formattedHash
+        }));
+        console.log('Formatted transactions:', formattedTransactions);
+        setTransactions(formattedTransactions);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      showError('Failed to load data from server');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Load data from API on component mount and when wallet address changes
   useEffect(() => {
-    const loadData = async () => {
-      if (!walletAddress) return;
-      
-      setIsLoading(true);
-      try {
-        // Load tokens for the current wallet
-        console.log('Loading tokens for wallet:', walletAddress);
-        const tokensResponse = await apiService.getTokensByOwner(walletAddress);
-        console.log('Tokens response:', tokensResponse);
-        if (tokensResponse.success) {
-          const formattedTokens: Token[] = tokensResponse.data.map((apiToken: ApiToken) => ({
-            name: apiToken.name,
-            symbol: apiToken.symbol,
-            supply: apiToken.supply,
-            value: apiToken.value,
-            address: apiToken.formattedAddress
-          }));
-          console.log('Formatted tokens:', formattedTokens);
-          setTokens(formattedTokens);
-        }
-
-        // Load all transactions
-        console.log('Loading transactions...');
-        const transactionsResponse = await apiService.getTransactions();
-        console.log('Transactions response:', transactionsResponse);
-        if (transactionsResponse.success) {
-          const formattedTransactions: Transaction[] = transactionsResponse.data.map((apiTransaction: ApiTransaction) => ({
-            type: apiTransaction.type,
-            amount: apiTransaction.amount,
-            symbol: apiTransaction.token_symbol || apiTransaction.symbol || 'TOKEN',
-            recipient: apiTransaction.recipient,
-            timestamp: apiTransaction.timestamp,
-            hash: apiTransaction.formattedHash
-          }));
-          console.log('Formatted transactions:', formattedTransactions);
-          setTransactions(formattedTransactions);
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-        showError('Failed to load data from server');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadData();
   }, [walletAddress, showError]);
 
@@ -143,30 +144,7 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
       }
 
       // Step 3: Refresh data from API to get the latest tokens and transactions
-      const tokensResponse = await apiService.getTokensByOwner(walletAddress);
-      if (tokensResponse.success) {
-        const formattedTokens: Token[] = tokensResponse.data.map((apiToken: ApiToken) => ({
-          name: apiToken.name,
-          symbol: apiToken.symbol,
-          supply: apiToken.supply,
-          value: apiToken.value,
-          address: apiToken.formattedAddress
-        }));
-        setTokens(formattedTokens);
-      }
-
-      const transactionsResponse = await apiService.getTransactions();
-      if (transactionsResponse.success) {
-        const formattedTransactions: Transaction[] = transactionsResponse.data.map((apiTransaction: ApiTransaction) => ({
-          type: apiTransaction.type,
-          amount: apiTransaction.amount,
-          symbol: apiTransaction.token_symbol || apiTransaction.symbol || 'TOKEN',
-          recipient: apiTransaction.recipient,
-          timestamp: apiTransaction.timestamp,
-          hash: apiTransaction.formattedHash
-        }));
-        setTransactions(formattedTransactions);
-      }
+      await loadData();
       
       const successMessage = `Token "${tokenData.name}" (${tokenData.symbol}) deployed to Paseo testnet! 
         Contract: ${deploymentResult.contractAddress}
@@ -390,7 +368,7 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
             
             {currentSlide === 2 && (
               <div className="carousel-item">
-                <MintSection onDeployToken={handleDeployToken} walletAddress={walletAddress} />
+                <MintSection onDeployToken={handleDeployToken} onTokenCreated={loadData} walletAddress={walletAddress} />
               </div>
             )}
             

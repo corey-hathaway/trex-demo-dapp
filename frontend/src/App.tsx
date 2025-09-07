@@ -15,6 +15,7 @@ function App() {
   };
 
   const handleWalletConnect = (address: string, accountName: string, session: any) => {
+    console.log('App - Wallet connected:', { address, accountName, session: !!session });
     setWalletAddress(address);
     setWalletName(accountName);
   };

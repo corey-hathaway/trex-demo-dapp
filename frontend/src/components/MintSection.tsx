@@ -3,10 +3,11 @@ import { apiService, CreateTokenRequest } from '../services/api';
 
 interface MintSectionProps {
   onDeployToken?: (tokenData: { name: string; symbol: string; supply: string }) => void;
+  onTokenCreated?: () => void; // New callback for when a token is just created
   walletAddress?: string | null;
 }
 
-export const MintSection: React.FC<MintSectionProps> = ({ onDeployToken, walletAddress }) => {
+export const MintSection: React.FC<MintSectionProps> = ({ onDeployToken, onTokenCreated, walletAddress }) => {
   const [assetName, setAssetName] = useState('');
   const [symbol, setSymbol] = useState('');
   const [tokenSupply, setTokenSupply] = useState('');
@@ -40,15 +41,6 @@ export const MintSection: React.FC<MintSectionProps> = ({ onDeployToken, walletA
       const response = await apiService.createToken(tokenData);
       
       if (response.success) {
-        // Call the callback with the token data
-        if (onDeployToken) {
-          onDeployToken({
-            name: assetName,
-            symbol: symbol,
-            supply: tokenSupply
-          });
-        }
-        
         // Reset form
         setAssetName('');
         setSymbol('');
@@ -56,6 +48,11 @@ export const MintSection: React.FC<MintSectionProps> = ({ onDeployToken, walletA
         
         // Show success message
         alert(`Token "${assetName}" (${symbol}) created successfully!`);
+        
+        // Call the callback to refresh data
+        if (onTokenCreated) {
+          onTokenCreated();
+        }
       } else {
         throw new Error('Failed to create token');
       }

@@ -28,16 +28,16 @@ export const TransactionsSection: React.FC<TransactionsSectionProps> = ({
       <div className="transactions-list">
         {transactions.length > 0 ? (
           transactions.map((tx, index) => (
-          <div key={index} className="transaction-item">
-            <div className="transaction-info">
-              <div className="transaction-details">
-                {tx.type} {tx.amount} {tx.symbol} → {tx.recipient}
-              </div>
-              <div className="transaction-timestamp">
-                {tx.timestamp}
+            <div key={index} className="transaction-item">
+              <div className="transaction-info">
+                <div className="transaction-details">
+                  {tx.type} {tx.amount} {tx.symbol} → {tx.recipient}
+                </div>
+                <div className="transaction-timestamp">
+                  {tx.timestamp}
+                </div>
               </div>
             </div>
-          </div>
           ))
         ) : (
           <div className="no-transactions-message">

@@ -25,7 +25,9 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('PolkadotAuth - Connection state changed:', { isConnected, address, accountName, session: !!session });
     if (isConnected && address && accountName && session && onConnect) {
+      console.log('PolkadotAuth - Calling onConnect with:', { address, accountName });
       onConnect(address, accountName, session);
     }
   }, [isConnected, address, accountName, session, onConnect]);

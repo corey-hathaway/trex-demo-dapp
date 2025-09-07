@@ -572,6 +572,63 @@ html {
   border-color: var(--accent-color);
 }
 
+/* Wallet Status in Navigation */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.wallet-status {
+  display: flex;
+  align-items: center;
+}
+
+.wallet-connected {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  flex-wrap: nowrap !important;
+  white-space: nowrap;
+}
+
+.wallet-address {
+  color: var(--success-color);
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.disconnect-btn {
+  background: transparent !important;
+  border: 2px solid transparent !important;
+  color: var(--secondary-text) !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.85rem !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.disconnect-btn:hover {
+  background: rgba(99, 102, 241, 0.1) !important;
+  border-color: var(--accent-color) !important;
+  color: var(--primary-text) !important;
+}
+
+.wallet-disconnected {
+  display: flex;
+  align-items: center;
+}
+
 /* Dashboard Styles */
 .dashboard {
   max-width: 1200px;
@@ -839,6 +896,28 @@ html {
   .nav-item {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
+  }
+  
+  .nav-right {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .wallet-connected {
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem 0.75rem;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+  }
+  
+  .wallet-address {
+    font-size: 0.8rem;
+  }
+  
+  .disconnect-btn {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.8rem !important;
   }
   
   .dashboard-grid {

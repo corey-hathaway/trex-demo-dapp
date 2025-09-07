@@ -5,7 +5,6 @@ import { DeployTokenSection } from './DeployTokenSection';
 import { YourTokensSection } from './YourTokensSection';
 import { TransactionsSection } from './TransactionsSection';
 import { ToastContainer } from './ToastContainer';
-import WalletConnect from './WalletConnect';
 import { useToast } from '../hooks/useToast';
 
 interface Token {
@@ -103,9 +102,6 @@ export const NewHomepage: React.FC = () => {
     // This could open a modal or navigate to a full transactions list
   };
 
-  const handleWalletConnect = (address: string) => {
-    console.log('Wallet connected:', address);
-  };
 
   const nextSlide = () => {
     setCurrentSlide((prev) => {
@@ -132,11 +128,6 @@ export const NewHomepage: React.FC = () => {
     <div className="new-homepage">
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      
-      {/* Wallet Connection - positioned in top right */}
-      <div className="wallet-connection-top">
-        <WalletConnect onConnect={handleWalletConnect} />
-      </div>
 
       {/* Hero Section */}
       <div className="hero-section">

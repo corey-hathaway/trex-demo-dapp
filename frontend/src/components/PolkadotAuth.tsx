@@ -12,20 +12,29 @@ type PolkadotAuthInstance = any;
 type AuthResult = any;
 
 interface PolkadotAuthProps {
-  onConnect?: (address: string, session: Session) => void;
+  onConnect?: (address: string, accountName: string, session: Session) => void;
   onDisconnect?: () => void;
+  hideConnectedState?: boolean; // New prop to hide the connected state UI
+  onSignOutReady?: (signOutFn: () => Promise<void>) => void; // Callback to expose signOut function
 }
 
-const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnect }) => {
-  const { isConnected, address, session, signIn, signOut } = usePolkadotAuth();
+const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnect, hideConnectedState = false, onSignOutReady }) => {
+  const authContext = usePolkadotAuth() as any;
+  const { isConnected, address, accountName, session, signIn, signOut } = authContext;
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isConnected && address && session && onConnect) {
-      onConnect(address, session);
+    if (isConnected && address && accountName && session && onConnect) {
+      onConnect(address, accountName, session);
     }
-  }, [isConnected, address, session, onConnect]);
+  }, [isConnected, address, accountName, session, onConnect]);
+
+  useEffect(() => {
+    if (onSignOutReady) {
+      onSignOutReady(handleSignOut);
+    }
+  }, [onSignOutReady]);
 
   const handleSignIn = async () => {
     try {
@@ -52,7 +61,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
     }
   };
 
-  if (isConnected && address) {
+  if (isConnected && address && !hideConnectedState) {
     return (
       <div className="flex items-center gap-4">
         <div className="text-sm">
@@ -69,6 +78,11 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
         </button>
       </div>
     );
+  }
+
+  // If connected but hideConnectedState is true, return null to let parent handle the UI
+  if (isConnected && address && hideConnectedState) {
+    return null;
   }
 
   return (

@@ -1,11 +1,36 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import PolkadotAuth from './PolkadotAuth';
 
 interface NavigationProps {
   currentPage: 'home' | 'dashboard';
   onPageChange: (page: 'home' | 'dashboard') => void;
+  walletAddress: string | null;
+  walletName: string | null;
+  onWalletConnect: (address: string, accountName: string, session: any) => void;
+  onWalletDisconnect: () => void;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) => {
+export const Navigation: React.FC<NavigationProps> = ({ 
+  currentPage, 
+  onPageChange, 
+  walletAddress, 
+  walletName,
+  onWalletConnect, 
+  onWalletDisconnect 
+}) => {
+  const [signOutFn, setSignOutFn] = React.useState<(() => Promise<void>) | null>(null);
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const handleDisconnect = async () => {
+    if (signOutFn) {
+      await signOutFn();
+    }
+    onWalletDisconnect();
+  };
+
   return (
     <nav className="main-navigation">
       <div className="nav-container">
@@ -13,13 +38,30 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChang
           <span className="brand-text">TokenyDemoDApp</span>
         </div>
         
-        <div className="nav-menu">
-          <button
-            className={`nav-item ${currentPage === 'dashboard' ? 'active' : ''}`}
-            onClick={() => onPageChange('dashboard')}
-          >
-            Asset Dashboard
-          </button>
+        <div className="nav-right">
+          {/* Wallet Status */}
+          <div className="wallet-status">
+            {walletAddress ? (
+              <div className="wallet-connected">
+                <span className="wallet-address">{walletName || formatAddress(walletAddress)}</span>
+                <button 
+                  className="nav-item disconnect-btn"
+                  onClick={handleDisconnect}
+                >
+                  Disconnect
+                </button>
+              </div>
+            ) : (
+              <div className="wallet-disconnected">
+                <PolkadotAuth 
+                  onConnect={onWalletConnect}
+                  onDisconnect={onWalletDisconnect}
+                  hideConnectedState={true}
+                  onSignOutReady={setSignOutFn}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>

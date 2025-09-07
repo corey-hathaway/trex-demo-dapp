@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import PolkadotAuth from './PolkadotAuth';
 
 interface TokenData {
   name: string;
@@ -11,18 +10,13 @@ interface TokenData {
   assetValue: string;
 }
 
-export const Dashboard: React.FC = () => {
-  const [address, setAddress] = useState<string | null>(null);
+interface DashboardProps {
+  walletAddress: string | null;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ walletAddress }) => {
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const handleWalletConnect = (walletAddress: string, session: any) => {
-    setAddress(walletAddress);
-  };
-
-  const handleWalletDisconnect = () => {
-    setAddress(null);
-  };
 
   // Mock data for demonstration - in real app this would come from blockchain
   useEffect(() => {
@@ -71,15 +65,9 @@ export const Dashboard: React.FC = () => {
       <div className="dashboard-header">
         <h1 className="dashboard-title">Asset Dashboard</h1>
         <p className="dashboard-subtitle">View and manage your tokenized asset details</p>
-        <div className="wallet-connection">
-          <PolkadotAuth 
-            onConnect={handleWalletConnect}
-            onDisconnect={handleWalletDisconnect}
-          />
-        </div>
       </div>
 
-      {address ? (
+      {walletAddress ? (
         <div className="dashboard-grid">
           {/* Asset Overview Card */}
           <div className="dashboard-card asset-overview">

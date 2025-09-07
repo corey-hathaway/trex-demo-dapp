@@ -1,45 +1,67 @@
 import React, { useState } from 'react';
+import { apiService, CreateTokenRequest } from '../services/api';
 
 interface MintSectionProps {
   onDeployToken?: (tokenData: { name: string; symbol: string; supply: string }) => void;
+  walletAddress?: string | null;
 }
 
-export const MintSection: React.FC<MintSectionProps> = ({ onDeployToken }) => {
+export const MintSection: React.FC<MintSectionProps> = ({ onDeployToken, walletAddress }) => {
   const [assetName, setAssetName] = useState('');
   const [symbol, setSymbol] = useState('');
   const [tokenSupply, setTokenSupply] = useState('');
   const [isDeploying, setIsDeploying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDeploy = async () => {
     if (!assetName || !symbol || !tokenSupply) {
-      alert('Please fill in all fields');
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if (!walletAddress) {
+      setError('Please connect your wallet first');
       return;
     }
 
     setIsDeploying(true);
+    setError(null);
     
     try {
-      // Simulate deployment process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create token via API
+      const tokenData: CreateTokenRequest = {
+        name: assetName,
+        symbol: symbol,
+        supply: tokenSupply,
+        decimals: 0,
+        owner_address: walletAddress
+      };
+
+      const response = await apiService.createToken(tokenData);
       
-      if (onDeployToken) {
-        onDeployToken({
-          name: assetName,
-          symbol: symbol,
-          supply: tokenSupply
-        });
+      if (response.success) {
+        // Call the callback with the token data
+        if (onDeployToken) {
+          onDeployToken({
+            name: assetName,
+            symbol: symbol,
+            supply: tokenSupply
+          });
+        }
+        
+        // Reset form
+        setAssetName('');
+        setSymbol('');
+        setTokenSupply('');
+        
+        // Show success message
+        alert(`Token "${assetName}" (${symbol}) created successfully!`);
+      } else {
+        throw new Error('Failed to create token');
       }
-      
-      // Reset form
-      setAssetName('');
-      setSymbol('');
-      setTokenSupply('');
-      
-      // Show success message (this will be replaced with toast notifications)
-      alert('Token deployed successfully!');
     } catch (error) {
       console.error('Deployment failed:', error);
-      alert('Deployment failed. Please try again.');
+      setError(error instanceof Error ? error.message : 'Deployment failed. Please try again.');
     } finally {
       setIsDeploying(false);
     }
@@ -48,6 +70,19 @@ export const MintSection: React.FC<MintSectionProps> = ({ onDeployToken }) => {
   return (
     <div className="homepage-section">
       <h3 className="section-header">Mint</h3>
+      
+      {error && (
+        <div className="error-message" style={{ 
+          color: '#ef4444', 
+          backgroundColor: '#fef2f2', 
+          border: '1px solid #fecaca', 
+          padding: '12px', 
+          borderRadius: '6px', 
+          marginBottom: '16px' 
+        }}>
+          {error}
+        </div>
+      )}
       
       <div className="form-group">
         <label htmlFor="assetName" className="form-label">Asset Name</label>

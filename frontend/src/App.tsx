@@ -37,7 +37,7 @@ function App() {
       />
       
       {/* Page Content */}
-      {currentPage === 'home' && <NewHomepage />}
+      {currentPage === 'home' && <NewHomepage walletAddress={walletAddress} />}
 
       {currentPage === 'dashboard' && (
         <div className="container mx-auto px-6 py-8">

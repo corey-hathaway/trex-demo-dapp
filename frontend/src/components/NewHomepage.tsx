@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MintSection } from './MintSection';
 import { TransferSection } from './TransferSection';
 import { DeployTokenSection } from './DeployTokenSection';
@@ -6,6 +6,7 @@ import { YourTokensSection } from './YourTokensSection';
 import { TransactionsSection } from './TransactionsSection';
 import { ToastContainer } from './ToastContainer';
 import { useToast } from '../hooks/useToast';
+import { apiService, Token as ApiToken, Transaction as ApiTransaction } from '../services/api';
 
 interface Token {
   name: string;
@@ -24,38 +25,124 @@ interface Transaction {
   hash: string;
 }
 
-export const NewHomepage: React.FC = () => {
+interface NewHomepageProps {
+  walletAddress?: string | null;
+}
+
+export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const { toasts, removeToast, showSuccess, showError } = useToast();
 
-  const handleDeployToken = (tokenData: { name: string; symbol: string; supply: string }) => {
+  // Load data from API on component mount and when wallet address changes
+  useEffect(() => {
+    const loadData = async () => {
+      if (!walletAddress) return;
+      
+      setIsLoading(true);
+      try {
+        // Load tokens for the current wallet
+        const tokensResponse = await apiService.getTokensByOwner(walletAddress);
+        if (tokensResponse.success) {
+          const formattedTokens: Token[] = tokensResponse.data.map((apiToken: ApiToken) => ({
+            name: apiToken.name,
+            symbol: apiToken.symbol,
+            supply: apiToken.supply,
+            value: apiToken.value,
+            address: apiToken.formattedAddress
+          }));
+          setTokens(formattedTokens);
+        }
+
+        // Load all transactions
+        const transactionsResponse = await apiService.getTransactions();
+        if (transactionsResponse.success) {
+          const formattedTransactions: Transaction[] = transactionsResponse.data.map((apiTransaction: ApiTransaction) => ({
+            type: apiTransaction.type,
+            amount: apiTransaction.amount,
+            symbol: apiTransaction.token_symbol || apiTransaction.symbol || 'TOKEN',
+            recipient: apiTransaction.recipient,
+            timestamp: apiTransaction.timestamp,
+            hash: apiTransaction.formattedHash
+          }));
+          setTransactions(formattedTransactions);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showError('Failed to load data from server');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [walletAddress, showError]);
+
+  const handleDeployToken = async (tokenData: { name: string; symbol: string; supply: string }) => {
     try {
-      const newToken: Token = {
+      if (!walletAddress) {
+        showError('Please connect your wallet first.');
+        return;
+      }
+
+      // Step 1: Create the token
+      const createResponse = await apiService.createToken({
         name: tokenData.name,
         symbol: tokenData.symbol,
         supply: tokenData.supply,
-        value: `$${(parseInt(tokenData.supply) * 1000).toLocaleString()}`, // Mock value calculation
-        address: `0x${Math.random().toString(16).substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`
-      };
+        decimals: 0,
+        owner_address: walletAddress
+      });
+
+      if (!createResponse.success) {
+        showError(`Failed to create token: ${createResponse.error}`);
+        return;
+      }
+
+      const tokenId = createResponse.data.id;
+      console.log('Token created with ID:', tokenId);
+
+      // Step 2: Deploy the token
+      const deployResponse = await apiService.deployToken(tokenId);
       
-      setTokens(prev => [newToken, ...prev]);
+      if (!deployResponse.success) {
+        showError(`Failed to deploy token: ${deployResponse.error}`);
+        return;
+      }
+
+      console.log('Token deployed with contract address:', deployResponse.contractAddress);
+
+      // Step 3: Refresh data from API to get the latest tokens and transactions
+      const tokensResponse = await apiService.getTokensByOwner(walletAddress);
+      if (tokensResponse.success) {
+        const formattedTokens: Token[] = tokensResponse.data.map((apiToken: ApiToken) => ({
+          name: apiToken.name,
+          symbol: apiToken.symbol,
+          supply: apiToken.supply,
+          value: apiToken.value,
+          address: apiToken.formattedAddress
+        }));
+        setTokens(formattedTokens);
+      }
+
+      const transactionsResponse = await apiService.getTransactions();
+      if (transactionsResponse.success) {
+        const formattedTransactions: Transaction[] = transactionsResponse.data.map((apiTransaction: ApiTransaction) => ({
+          type: apiTransaction.type,
+          amount: apiTransaction.amount,
+          symbol: apiTransaction.token_symbol || apiTransaction.symbol || 'TOKEN',
+          recipient: apiTransaction.recipient,
+          timestamp: apiTransaction.timestamp,
+          hash: apiTransaction.formattedHash
+        }));
+        setTransactions(formattedTransactions);
+      }
       
-      // Add mint transaction
-      const mintTransaction: Transaction = {
-        type: 'Mint',
-        amount: tokenData.supply,
-        symbol: tokenData.symbol,
-        recipient: 'New Token',
-        timestamp: 'Just now',
-        hash: `0x${Math.random().toString(16).substr(2, 8)}...`
-      };
-      
-      setTransactions(prev => [mintTransaction, ...prev]);
-      
-      showSuccess(`Token "${tokenData.name}" (${tokenData.symbol}) deployed successfully!`);
+      showSuccess(`Token "${tokenData.name}" (${tokenData.symbol}) created and deployed successfully! Contract: ${deployResponse.contractAddress}`);
     } catch (error) {
+      console.error('Error deploying token:', error);
       showError('Failed to deploy token. Please try again.');
     }
   };
@@ -141,7 +228,7 @@ export const NewHomepage: React.FC = () => {
           <div className="carousel-track">
             {currentSlide === 0 && (
               <div className="carousel-item">
-                <MintSection onDeployToken={handleDeployToken} />
+                <MintSection onDeployToken={handleDeployToken} walletAddress={walletAddress} />
               </div>
             )}
             

@@ -2,7 +2,7 @@ import { http, createConfig } from "@wagmi/core";
 import { type Chain } from "viem";
 import { metaMask } from "@wagmi/connectors";
 
-const paseoTestnet = {
+export const paseoTestnet = {
   id: 420420420,
   name: "Paseo Testnet (Passet Hub)",
   nativeCurrency: {

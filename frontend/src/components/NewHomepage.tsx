@@ -35,6 +35,9 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [networkTestResult, setNetworkTestResult] = useState<string | null>(null);
+  const [deploymentTestResult, setDeploymentTestResult] = useState<string | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
   const { toasts, removeToast, showSuccess, showError } = useToast();
 
   // Load data from API on component mount and when wallet address changes
@@ -260,23 +263,45 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
                   </div>
                   <button
                     onClick={async () => {
+                      setIsTesting(true);
+                      setNetworkTestResult(null);
                       try {
                         const networkInfo = await polkadotTREXDeploymentService.getNetworkInfo();
                         const factoryAvailable = await polkadotTREXDeploymentService.checkTREXFactoryAvailability();
                         const deploymentConfig = polkadotTREXDeploymentService.getDeploymentConfig();
                         
-                        showSuccess(`✅ Connected to Paseo testnet! 
-                          Chain: ${networkInfo?.chainName}
-                          Block: ${networkInfo?.blockNumber}
-                          Factory: ${factoryAvailable ? 'Available' : 'Not Available'}`);
+                        setNetworkTestResult(`✅ Connected to Paseo testnet!
+Chain: ${networkInfo?.chainName}
+Block: ${networkInfo?.blockNumber}
+Factory: ${factoryAvailable ? 'Available' : 'Not Available'}
+RPC: ${networkInfo?.rpcUrl}`);
                       } catch (error) {
-                        showError('Failed to connect to Paseo testnet');
+                        setNetworkTestResult(`❌ Failed to connect to Paseo testnet: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                      } finally {
+                        setIsTesting(false);
                       }
                     }}
+                    disabled={isTesting}
                     className="btn-primary"
                   >
-                    Test Network Connectivity
+                    {isTesting ? 'Testing...' : 'Test Network Connectivity'}
                   </button>
+                  
+                  {networkTestResult && (
+                    <div className="test-result" style={{
+                      marginTop: '16px',
+                      padding: '12px',
+                      backgroundColor: networkTestResult.startsWith('✅') ? '#f0f9ff' : '#fef2f2',
+                      border: `1px solid ${networkTestResult.startsWith('✅') ? '#0ea5e9' : '#ef4444'}`,
+                      borderRadius: '6px',
+                      color: networkTestResult.startsWith('✅') ? '#0c4a6e' : '#991b1b',
+                      fontFamily: 'monospace',
+                      fontSize: '14px',
+                      whiteSpace: 'pre-line'
+                    }}>
+                      {networkTestResult}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -291,9 +316,12 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
                   <button
                     onClick={async () => {
                       if (!walletAddress) {
-                        showError('Please connect your wallet first');
+                        setDeploymentTestResult('❌ Please connect your wallet first');
                         return;
                       }
+                      
+                      setIsTesting(true);
+                      setDeploymentTestResult(null);
                       
                       try {
                         const deploymentResult = await polkadotTREXDeploymentService.deployTREXToken({
@@ -307,21 +335,41 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
                         });
                         
                         if (deploymentResult.success) {
-                          showSuccess(`✅ Test token deployed! 
-                            Contract: ${deploymentResult.contractAddress}
-                            Transaction: ${deploymentResult.transactionHash}`);
+                          setDeploymentTestResult(`✅ Test token deployed successfully!
+Contract: ${deploymentResult.contractAddress}
+Transaction: ${deploymentResult.transactionHash}
+Network: Paseo Testnet (Passet Hub)
+Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deploymentResult.transactionHash}`);
                         } else {
-                          showError(`Deployment failed: ${deploymentResult.error}`);
+                          setDeploymentTestResult(`❌ Deployment failed: ${deploymentResult.error}`);
                         }
                       } catch (error) {
-                        showError('Failed to deploy test token');
+                        setDeploymentTestResult(`❌ Failed to deploy test token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                      } finally {
+                        setIsTesting(false);
                       }
                     }}
-                    disabled={!walletAddress}
+                    disabled={!walletAddress || isTesting}
                     className="btn-secondary"
                   >
-                    {walletAddress ? 'Test Token Deployment' : 'Connect Wallet First'}
+                    {!walletAddress ? 'Connect Wallet First' : isTesting ? 'Testing...' : 'Test Token Deployment'}
                   </button>
+                  
+                  {deploymentTestResult && (
+                    <div className="test-result" style={{
+                      marginTop: '16px',
+                      padding: '12px',
+                      backgroundColor: deploymentTestResult.startsWith('✅') ? '#f0f9ff' : '#fef2f2',
+                      border: `1px solid ${deploymentTestResult.startsWith('✅') ? '#0ea5e9' : '#ef4444'}`,
+                      borderRadius: '6px',
+                      color: deploymentTestResult.startsWith('✅') ? '#0c4a6e' : '#991b1b',
+                      fontFamily: 'monospace',
+                      fontSize: '14px',
+                      whiteSpace: 'pre-line'
+                    }}>
+                      {deploymentTestResult}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

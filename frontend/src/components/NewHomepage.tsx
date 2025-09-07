@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { MintSection } from './MintSection';
 import { TransferSection } from './TransferSection';
 import { DeployTokenSection } from './DeployTokenSection';
-import { TestDeployment } from './TestDeployment';
 import { YourTokensSection } from './YourTokensSection';
 import { TransactionsSection } from './TransactionsSection';
 import { ToastContainer } from './ToastContainer';
 import { useToast } from '../hooks/useToast';
 import { apiService, Token as ApiToken, Transaction as ApiTransaction } from '../services/api';
+import { polkadotTREXDeploymentService } from '../services/polkadotTREXDeployment';
 
 interface Token {
   name: string;
@@ -98,22 +98,40 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
       });
 
       if (!createResponse.success) {
-        showError(`Failed to create token: ${createResponse.error}`);
+        showError(`Failed to create token: ${(createResponse as any).error || 'Unknown error'}`);
         return;
       }
 
       const tokenId = createResponse.data.id;
       console.log('Token created with ID:', tokenId);
 
-      // Step 2: Deploy the token
-      const deployResponse = await apiService.deployToken(tokenId);
+      // Step 2: Deploy the token using Polkadot.js Extension
+      console.log('🚀 Starting real T-REX deployment with Polkadot.js Extension...');
       
-      if (!deployResponse.success) {
-        showError(`Failed to deploy token: ${deployResponse.error}`);
+      const deploymentResult = await polkadotTREXDeploymentService.deployTREXToken({
+        name: tokenData.name,
+        symbol: tokenData.symbol,
+        decimals: 0,
+        owner: walletAddress, // Polkadot address format
+        identityRegistry: '0x0000000000000000000000000000000000000000', // Mock address for now
+        compliance: '0x0000000000000000000000000000000000000000', // Mock address for now
+        onchainID: '0x0000000000000000000000000000000000000000' // Mock address for now
+      });
+      
+      if (!deploymentResult.success) {
+        showError(`Failed to deploy token: ${deploymentResult.error}`);
         return;
       }
 
-      console.log('Token deployed with contract address:', deployResponse.contractAddress);
+      console.log('Token deployed with contract address:', deploymentResult.contractAddress);
+      
+      // Update the backend with the deployment result
+      const deployResponse = await apiService.deployToken(tokenId);
+      
+      if (!deployResponse.success) {
+        console.warn('Backend deployment update failed:', (deployResponse as any).error || 'Unknown error');
+        // Continue anyway since the real deployment succeeded
+      }
 
       // Step 3: Refresh data from API to get the latest tokens and transactions
       const tokensResponse = await apiService.getTokensByOwner(walletAddress);
@@ -142,9 +160,10 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
       }
       
       const successMessage = `Token "${tokenData.name}" (${tokenData.symbol}) deployed to Paseo testnet! 
-        Contract: ${deployResponse.contractAddress}
-        Network: ${deployResponse.network || 'Paseo Testnet (Passet Hub)'}
-        ${deployResponse.explorerUrl ? `Explorer: ${deployResponse.explorerUrl}` : ''}`;
+        Contract: ${deploymentResult.contractAddress}
+        Transaction: ${deploymentResult.transactionHash}
+        Network: Paseo Testnet (Passet Hub)
+        Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deploymentResult.transactionHash}`;
       
       showSuccess(successMessage);
     } catch (error) {
@@ -198,7 +217,7 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
 
   const nextSlide = () => {
     setCurrentSlide((prev) => {
-      const newSlide = (prev + 1) % 3;
+      const newSlide = (prev + 1) % 5;
       console.log('Next slide:', newSlide);
       return newSlide;
     });
@@ -206,7 +225,7 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
 
   const prevSlide = () => {
     setCurrentSlide((prev) => {
-      const newSlide = (prev - 1 + 3) % 3;
+      const newSlide = (prev - 1 + 5) % 5;
       console.log('Prev slide:', newSlide);
       return newSlide;
     });
@@ -234,17 +253,92 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
           <div className="carousel-track">
             {currentSlide === 0 && (
               <div className="carousel-item">
-                <MintSection onDeployToken={handleDeployToken} walletAddress={walletAddress} />
+                <div className="homepage-section">
+                  <div className="section-header">
+                    <h3>🌐 Network Connectivity</h3>
+                    <p>Test connection to Paseo testnet (Passet Hub)</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const networkInfo = await polkadotTREXDeploymentService.getNetworkInfo();
+                        const factoryAvailable = await polkadotTREXDeploymentService.checkTREXFactoryAvailability();
+                        const deploymentConfig = polkadotTREXDeploymentService.getDeploymentConfig();
+                        
+                        showSuccess(`✅ Connected to Paseo testnet! 
+                          Chain: ${networkInfo?.chainName}
+                          Block: ${networkInfo?.blockNumber}
+                          Factory: ${factoryAvailable ? 'Available' : 'Not Available'}`);
+                      } catch (error) {
+                        showError('Failed to connect to Paseo testnet');
+                      }
+                    }}
+                    className="btn-primary"
+                  >
+                    Test Network Connectivity
+                  </button>
+                </div>
               </div>
             )}
             
             {currentSlide === 1 && (
               <div className="carousel-item">
-                <TransferSection tokens={tokens} onTransfer={handleTransfer} />
+                <div className="homepage-section">
+                  <div className="section-header">
+                    <h3>🚀 Token Deployment</h3>
+                    <p>Test real T-REX token deployment with your wallet</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!walletAddress) {
+                        showError('Please connect your wallet first');
+                        return;
+                      }
+                      
+                      try {
+                        const deploymentResult = await polkadotTREXDeploymentService.deployTREXToken({
+                          name: 'Test Token',
+                          symbol: 'TEST',
+                          decimals: 0,
+                          owner: walletAddress,
+                          identityRegistry: '0x0000000000000000000000000000000000000000',
+                          compliance: '0x0000000000000000000000000000000000000000',
+                          onchainID: '0x0000000000000000000000000000000000000000'
+                        });
+                        
+                        if (deploymentResult.success) {
+                          showSuccess(`✅ Test token deployed! 
+                            Contract: ${deploymentResult.contractAddress}
+                            Transaction: ${deploymentResult.transactionHash}`);
+                        } else {
+                          showError(`Deployment failed: ${deploymentResult.error}`);
+                        }
+                      } catch (error) {
+                        showError('Failed to deploy test token');
+                      }
+                    }}
+                    disabled={!walletAddress}
+                    className="btn-secondary"
+                  >
+                    {walletAddress ? 'Test Token Deployment' : 'Connect Wallet First'}
+                  </button>
+                </div>
               </div>
             )}
             
             {currentSlide === 2 && (
+              <div className="carousel-item">
+                <MintSection onDeployToken={handleDeployToken} walletAddress={walletAddress} />
+              </div>
+            )}
+            
+            {currentSlide === 3 && (
+              <div className="carousel-item">
+                <TransferSection tokens={tokens} onTransfer={handleTransfer} />
+              </div>
+            )}
+            
+            {currentSlide === 4 && (
               <div className="carousel-item">
                 <DeployTokenSection onDeployToken={handleDeployToken} />
               </div>
@@ -257,11 +351,18 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
               ‹
             </button>
             <div className="carousel-dots">
-              {[0, 1, 2].map((index) => (
+              {[
+                { index: 0, label: 'Network' },
+                { index: 1, label: 'Deploy' },
+                { index: 2, label: 'Mint' },
+                { index: 3, label: 'Transfer' },
+                { index: 4, label: 'Deploy' }
+              ].map(({ index, label }) => (
                 <button
                   key={index}
                   className={`carousel-dot ${currentSlide === index ? 'active' : ''}`}
                   onClick={() => goToSlide(index)}
+                  title={label}
                 />
               ))}
             </div>
@@ -272,8 +373,6 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
         </div>
       </div>
 
-      {/* Test Deployment Section */}
-      <TestDeployment walletAddress={walletAddress} />
 
       {/* Bottom Grid - Your Tokens and Transactions */}
       <div className="homepage-grid bottom-grid">

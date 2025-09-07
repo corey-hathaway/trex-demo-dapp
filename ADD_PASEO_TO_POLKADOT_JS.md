@@ -2,23 +2,19 @@
 
 ## 📋 **Step-by-Step Guide**
 
-### **Method 1: Manual Network Addition**
+### **Method 1: Direct URL (Recommended)**
 
-1. **Open Polkadot.js Apps**
-   - Go to [https://polkadot.js.org/apps](https://polkadot.js.org/apps)
+**🔗 [Polkadot.js Apps - Paseo Asset Hub](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Fpasset-hub-paseo.ibp.network#/explorer)**
 
-2. **Access Network Settings**
-   - Click on the network dropdown (top left)
-   - Select "Add custom endpoint"
+This direct link automatically connects to Paseo Asset Hub without any manual configuration needed!
 
-3. **Add Paseo Asset Hub**
-   - **Name**: `Paseo Asset Hub`
-   - **RPC Endpoint**: `wss://passet-hub-paseo.ibp.network`
-   - Click "Save"
+### **Method 1b: Manual URL Construction**
 
-4. **Switch to Paseo Asset Hub**
-   - Select "Paseo Asset Hub" from the network dropdown
-   - Wait for connection to establish
+1. **Base URL**: `https://polkadot.js.org/apps/`
+2. **Add RPC parameter**: `?rpc=wss://passet-hub-paseo.ibp.network`
+3. **Final URL**: `https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Fpasset-hub-paseo.ibp.network`
+
+**Note**: The "Add custom endpoint" option is no longer available in the network dropdown in recent versions of Polkadot.js Apps.
 
 ### **Method 2: Direct URL Access**
 

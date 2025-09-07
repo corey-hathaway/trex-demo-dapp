@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { trexDeploymentService } from '../services/trexDeployment';
+import { polkadotTREXDeploymentService } from '../services/polkadotTREXDeployment';
 
 interface TestDeploymentProps {
   walletAddress?: string | null;
@@ -19,15 +19,15 @@ export const TestDeployment: React.FC<TestDeploymentProps> = ({ walletAddress })
       console.log('🧪 Starting Paseo testnet connectivity test...');
 
       // Test 1: Network Info
-      const networkInfo = await trexDeploymentService.getNetworkInfo();
+      const networkInfo = await polkadotTREXDeploymentService.getNetworkInfo();
       console.log('📡 Network Info:', networkInfo);
 
       // Test 2: T-REX Factory Availability
-      const factoryAvailable = await trexDeploymentService.checkTREXFactoryAvailability();
+      const factoryAvailable = await polkadotTREXDeploymentService.checkTREXFactoryAvailability();
       console.log('🏭 T-REX Factory Available:', factoryAvailable);
 
       // Test 3: Deployment Config
-      const deploymentConfig = trexDeploymentService.getDeploymentConfig();
+      const deploymentConfig = polkadotTREXDeploymentService.getDeploymentConfig();
       console.log('⚙️ Deployment Config:', deploymentConfig);
 
       setTestResults({
@@ -59,12 +59,12 @@ export const TestDeployment: React.FC<TestDeploymentProps> = ({ walletAddress })
 
       console.log('🚀 Testing token deployment...');
 
-      // Test deployment with mock parameters
-      const deploymentResult = await trexDeploymentService.deployTREXToken({
+      // Test deployment with mock parameters using Polkadot.js Extension
+      const deploymentResult = await polkadotTREXDeploymentService.deployTREXToken({
         name: 'Test Token',
         symbol: 'TEST',
         decimals: 0,
-        owner: walletAddress as `0x${string}`,
+        owner: walletAddress, // Polkadot address format
         identityRegistry: '0x0000000000000000000000000000000000000000', // Mock address
         compliance: '0x0000000000000000000000000000000000000000', // Mock address
         onchainID: '0x0000000000000000000000000000000000000000' // Mock address
@@ -72,7 +72,7 @@ export const TestDeployment: React.FC<TestDeploymentProps> = ({ walletAddress })
 
       console.log('📝 Deployment Result:', deploymentResult);
 
-      setTestResults(prev => ({
+      setTestResults((prev: any) => ({
         ...prev,
         deploymentTest: deploymentResult,
         deploymentTimestamp: new Date().toISOString()
@@ -107,7 +107,7 @@ export const TestDeployment: React.FC<TestDeploymentProps> = ({ walletAddress })
         <button
           onClick={testTokenDeployment}
           disabled={isTesting || !walletAddress}
-          className="btn-secondary"
+          className="btn-secondary mt-6"
         >
           {isTesting ? 'Testing Deployment...' : 'Test Token Deployment'}
         </button>

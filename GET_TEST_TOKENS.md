@@ -24,10 +24,20 @@ Visit the official Paseo testnet faucet:
 
 ### **Method 1: Polkadot.js Apps**
 1. Go to [Polkadot.js Apps](https://polkadot.js.org/apps/)
-2. Connect to "Passet Hub" network
-3. Use the faucet tab to request tokens
+2. **Add Paseo Asset Hub manually**:
+   - Click network dropdown → "Add custom endpoint"
+   - Name: `Paseo Asset Hub`
+   - RPC: `wss://passet-hub-paseo.ibp.network`
+   - Click "Save"
+3. Select "Paseo Asset Hub" from network dropdown
+4. Use the faucet tab to request tokens
 
-### **Method 2: Direct RPC Call**
+### **Method 2: Direct Link (Easiest)**
+**🔗 [Polkadot.js Apps - Paseo Asset Hub](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Fpasset-hub-paseo.ibp.network#/explorer)**
+- This link opens Polkadot.js Apps already connected to Paseo Asset Hub
+- No manual configuration needed!
+
+### **Method 3: Direct RPC Call**
 ```bash
 curl -X POST "https://testnet-passet-hub.polkadot.io" \
   -H "Content-Type: application/json" \

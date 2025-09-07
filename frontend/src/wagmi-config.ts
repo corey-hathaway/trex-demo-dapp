@@ -13,7 +13,7 @@ const paseoTestnet = {
   rpcUrls: {
     default: {
       http: ["https://testnet-passet-hub.polkadot.io"],
-      webSocket: ["wss://paseo-rpc.dwellir.com"]
+      webSocket: ["wss://passet-hub-paseo.ibp.network"]
     }
   },
   blockExplorers: {

@@ -98,7 +98,7 @@ export const TestDeployment: React.FC<TestDeploymentProps> = ({ walletAddress })
         <button
           onClick={runNetworkTest}
           disabled={isTesting}
-          className="btn-primary w-full"
+          className="btn-primary"
         >
           {isTesting ? 'Testing Network...' : 'Test Network Connectivity'}
         </button>
@@ -107,7 +107,7 @@ export const TestDeployment: React.FC<TestDeploymentProps> = ({ walletAddress })
         <button
           onClick={testTokenDeployment}
           disabled={isTesting || !walletAddress}
-          className="btn-secondary w-full"
+          className="btn-secondary"
         >
           {isTesting ? 'Testing Deployment...' : 'Test Token Deployment'}
         </button>
@@ -170,17 +170,6 @@ export const TestDeployment: React.FC<TestDeploymentProps> = ({ walletAddress })
           </div>
         )}
 
-        {/* Instructions */}
-        <div className="instructions">
-          <h4>📋 Instructions</h4>
-          <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li>First, get PAS test tokens from the <a href="https://paritytech.github.io/polkadot-testnet-faucet/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Paseo Faucet</a></li>
-            <li>Make sure to select "Passet Hub: smart contracts" in the chain dropdown</li>
-            <li>Connect your wallet to the dApp</li>
-            <li>Run the network connectivity test</li>
-            <li>Test token deployment (this will use mock addresses for now)</li>
-          </ol>
-        </div>
       </div>
     </div>
   );

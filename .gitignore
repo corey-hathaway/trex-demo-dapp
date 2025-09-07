@@ -53,3 +53,4 @@ wagmi.config.bundled_*.mjs
 
 # T-REX contract artifacts (these are mock files)
 T-REX/
+polkadot-sso/

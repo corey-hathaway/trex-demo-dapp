@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import PolkadotAuth from './PolkadotAuth';
 
 interface TokenData {
   name: string;
@@ -12,9 +12,17 @@ interface TokenData {
 }
 
 export const Dashboard: React.FC = () => {
-  const { address } = useAccount();
+  const [address, setAddress] = useState<string | null>(null);
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const handleWalletConnect = (walletAddress: string, session: any) => {
+    setAddress(walletAddress);
+  };
+
+  const handleWalletDisconnect = () => {
+    setAddress(null);
+  };
 
   // Mock data for demonstration - in real app this would come from blockchain
   useEffect(() => {
@@ -63,24 +71,31 @@ export const Dashboard: React.FC = () => {
       <div className="dashboard-header">
         <h1 className="dashboard-title">Asset Dashboard</h1>
         <p className="dashboard-subtitle">View and manage your tokenized asset details</p>
+        <div className="wallet-connection">
+          <PolkadotAuth 
+            onConnect={handleWalletConnect}
+            onDisconnect={handleWalletDisconnect}
+          />
+        </div>
       </div>
 
-      <div className="dashboard-grid">
-        {/* Asset Overview Card */}
-        <div className="dashboard-card asset-overview">
-          <div className="card-header">
-            <h3>Asset Overview</h3>
-            <div className="asset-badge">{tokenData.symbol}</div>
-          </div>
-          <div className="asset-details">
-            <div className="asset-name">{tokenData.name}</div>
-            <div className="asset-symbol">{tokenData.symbol}</div>
-            <div className="asset-supply">
-              <span className="label">Total Supply:</span>
-              <span className="value">{tokenData.totalSupply}</span>
+      {address ? (
+        <div className="dashboard-grid">
+          {/* Asset Overview Card */}
+          <div className="dashboard-card asset-overview">
+            <div className="card-header">
+              <h3>Asset Overview</h3>
+              <div className="asset-badge">{tokenData.symbol}</div>
+            </div>
+            <div className="asset-details">
+              <div className="asset-name">{tokenData.name}</div>
+              <div className="asset-symbol">{tokenData.symbol}</div>
+              <div className="asset-supply">
+                <span className="label">Total Supply:</span>
+                <span className="value">{tokenData.totalSupply}</span>
+              </div>
             </div>
           </div>
-        </div>
 
         {/* Contract Information */}
         <div className="dashboard-card contract-info">
@@ -128,14 +143,22 @@ export const Dashboard: React.FC = () => {
             <p className="chart-note">Visual representation of token holder distribution</p>
           </div>
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="dashboard-actions">
-        <button className="btn-primary">View on Explorer</button>
-        <button className="btn-secondary">Export Data</button>
-        <button className="btn-secondary">Manage Permissions</button>
-      </div>
+          {/* Quick Actions */}
+          <div className="dashboard-actions">
+            <button className="btn-primary">View on Explorer</button>
+            <button className="btn-secondary">Export Data</button>
+            <button className="btn-secondary">Manage Permissions</button>
+          </div>
+        </div>
+      ) : (
+        <div className="connect-wallet-prompt">
+          <div className="prompt-content">
+            <h3>Connect Your Wallet</h3>
+            <p>Please connect your Polkadot wallet to view your asset details and manage your tokens.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -105,18 +105,28 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
   };
 
   const handleSignOut = async () => {
+    console.log('Disconnect button clicked - starting sign out process');
     try {
       // Call polkadot-sso signOut
+      console.log('Calling polkadot-sso signOut...');
       await signOut();
+      console.log('Polkadot-sso signOut completed');
       
       // Clear local state
+      console.log('Clearing local state...');
       setAddress(null);
       setAccountName(null);
       setIsConnected(false);
+      console.log('Local state cleared');
       
-      // Notify parent component
-      if (onDisconnect) {
+      // Only call onDisconnect if we're not hiding the connected state
+      // (i.e., if we're showing our own disconnect button)
+      if (onDisconnect && !hideConnectedState) {
+        console.log('Calling onDisconnect callback...');
         onDisconnect();
+        console.log('onDisconnect callback completed');
+      } else {
+        console.log('Not calling onDisconnect - hideConnectedState is true or no callback provided');
       }
     } catch (err) {
       console.error('Sign out error:', err);

@@ -21,19 +21,22 @@ interface PolkadotAuthProps {
 
 const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnect, hideConnectedState = false, onSignOutReady }) => {
   const authContext = usePolkadotAuth() as any;
-  const { isConnected, address, accountName, session, signIn, signOut } = authContext;
+  const { signIn, signOut } = authContext;
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [address, setAddress] = useState<string | null>(null);
+  const [accountName, setAccountName] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('PolkadotAuth - Connection state changed:', { isConnected, address, accountName, session: !!session });
-    if (isConnected && address && session && onConnect) {
+    console.log('PolkadotAuth - Connection state changed:', { isConnected, address, accountName });
+    if (isConnected && address && onConnect) {
       // Use accountName if available, otherwise use a formatted address as fallback
       const displayName = accountName || `Account ${address.slice(0, 6)}...${address.slice(-4)}`;
       console.log('PolkadotAuth - Calling onConnect with:', { address, accountName: displayName });
-      onConnect(address, displayName, session);
+      onConnect(address, displayName, { account: { address, meta: { name: accountName } } });
     }
-  }, [isConnected, address, accountName, session, onConnect]);
+  }, [isConnected, address, accountName, onConnect]);
 
   // Check for existing connection on mount
   useEffect(() => {
@@ -47,9 +50,10 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
           const account = accounts[0];
           const realAccountName = account.meta.name || `Account ${account.address.slice(0, 6)}...${account.address.slice(-4)}`;
           
-          if (onConnect) {
-            onConnect(account.address, realAccountName, { account });
-          }
+          // Set local state
+          setAddress(account.address);
+          setAccountName(realAccountName);
+          setIsConnected(true);
         }
       } catch (err) {
         console.error('Error checking existing connection:', err);
@@ -85,13 +89,13 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
       const account = accounts[0];
       const realAccountName = account.meta.name || `Account ${account.address.slice(0, 6)}...${account.address.slice(-4)}`;
       
+      // Set local state
+      setAddress(account.address);
+      setAccountName(realAccountName);
+      setIsConnected(true);
+      
       // Call the polkadot-sso signIn to maintain the session structure
       await signIn();
-      
-      // Override the mock data with real data
-      if (onConnect) {
-        onConnect(account.address, realAccountName, { account });
-      }
     } catch (err) {
       console.error('Sign in error:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign in');
@@ -102,7 +106,15 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
 
   const handleSignOut = async () => {
     try {
+      // Call polkadot-sso signOut
       await signOut();
+      
+      // Clear local state
+      setAddress(null);
+      setAccountName(null);
+      setIsConnected(false);
+      
+      // Notify parent component
       if (onDisconnect) {
         onDisconnect();
       }

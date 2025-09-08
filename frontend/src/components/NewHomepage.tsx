@@ -379,7 +379,12 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
                     disabled={!walletAddress || isTesting}
                     className="btn-secondary"
                   >
-                    {!walletAddress ? 'Connect Wallet First' : isTesting ? 'Testing...' : 'Test Token Deployment'}
+                    {!walletAddress ? 'Connect Wallet First' : isTesting ? (
+                      <>
+                        <span className="spinner"></span>
+                        Testing...
+                      </>
+                    ) : 'Test Token Deployment'}
                   </button>
                   
                   {deploymentTestResult && (

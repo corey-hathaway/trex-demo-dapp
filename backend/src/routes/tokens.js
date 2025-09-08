@@ -161,6 +161,33 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/tokens/clear - Clear all tokens and transactions
+router.delete('/clear', async (req, res) => {
+  try {
+    // Import database connection
+    const db = (await import('../models/database.js')).default;
+    
+    // Clear transactions first (due to foreign key constraints)
+    const deleteTransactionsStmt = db.prepare('DELETE FROM transactions');
+    deleteTransactionsStmt.run();
+    
+    // Clear tokens
+    const deleteTokensStmt = db.prepare('DELETE FROM tokens');
+    deleteTokensStmt.run();
+    
+    res.json({
+      success: true,
+      message: 'All tokens and transactions cleared successfully'
+    });
+  } catch (error) {
+    console.error('Error clearing data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to clear data'
+    });
+  }
+});
+
 // DELETE /api/tokens/:id - Delete token
 router.delete('/:id', async (req, res) => {
   try {
@@ -270,28 +297,6 @@ router.post('/:id/deploy', async (req, res) => {
       success: false,
       error: 'Failed to deploy token to Paseo testnet',
       details: error.message
-    });
-  }
-});
-
-// DELETE /api/tokens/clear - Clear all tokens and transactions
-router.delete('/clear', async (req, res) => {
-  try {
-    // Clear transactions first (due to foreign key constraints)
-    await Transaction.destroy({ where: {} });
-    
-    // Clear tokens
-    await Token.destroy({ where: {} });
-    
-    res.json({
-      success: true,
-      message: 'All tokens and transactions cleared successfully'
-    });
-  } catch (error) {
-    console.error('Error clearing data:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to clear data'
     });
   }
 });

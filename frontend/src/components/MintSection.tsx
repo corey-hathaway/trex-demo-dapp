@@ -46,8 +46,18 @@ export const MintSection: React.FC<MintSectionProps> = ({ onDeployToken, onToken
         setSymbol('');
         setTokenSupply('');
         
-        // Show success message
-        alert(`Token "${assetName}" (${symbol}) created successfully!`);
+        // Show success message with better styling
+        const successMessage = `🎉 Token "${assetName}" (${symbol}) created successfully!
+        
+✅ Token Details:
+• Name: ${assetName}
+• Symbol: ${symbol}
+• Supply: ${tokenSupply}
+• Owner: ${walletAddress}
+
+Your token is now ready for deployment!`;
+        
+        alert(successMessage);
         
         // Call the callback to refresh data
         if (onTokenCreated) {

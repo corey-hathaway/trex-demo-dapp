@@ -6,13 +6,6 @@ export const Footer: React.FC = () => {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-section">
-            <h4 className="footer-title">T-REX Deployer</h4>
-            <p className="footer-description">
-              Deploy ERC-3643 compliant security tokens on Polkadot with Tokeny's regulatory framework.
-            </p>
-          </div>
-          
-          <div className="footer-section">
             <h5 className="footer-subtitle">Resources</h5>
             <ul className="footer-links">
               <li><a href="#" className="footer-link">Documentation</a></li>

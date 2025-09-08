@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Modal } from './Modal';
 
 interface Token {
   name: string;
@@ -19,8 +20,19 @@ export const YourTokensSection: React.FC<YourTokensSectionProps> = ({
   onViewToken, 
   onViewAll 
 }) => {
+  const [selectedToken, setSelectedToken] = useState<Token | null>(null);
+  const [showViewAllModal, setShowViewAllModal] = useState(false);
+  
   console.log('YourTokensSection - tokens received:', tokens);
   console.log('YourTokensSection - tokens.length:', tokens.length);
+
+  const handleViewToken = (token: Token) => {
+    setSelectedToken(token);
+  };
+
+  const handleViewAll = () => {
+    setShowViewAllModal(true);
+  };
 
   return (
     <div className="homepage-section">
@@ -37,7 +49,7 @@ export const YourTokensSection: React.FC<YourTokensSectionProps> = ({
               </div>
             </div>
             <button
-              onClick={() => onViewToken?.(token)}
+              onClick={() => handleViewToken(token)}
               className="btn-secondary view-token-btn"
             >
               View
@@ -52,11 +64,72 @@ export const YourTokensSection: React.FC<YourTokensSectionProps> = ({
       </div>
       
       <button
-        onClick={onViewAll}
+        onClick={handleViewAll}
         className="btn-secondary view-all-btn"
       >
         View All
       </button>
+
+      {/* Token Detail Modal */}
+      <Modal
+        isOpen={!!selectedToken}
+        onClose={() => setSelectedToken(null)}
+        title={selectedToken ? `${selectedToken.name} (${selectedToken.symbol})` : ''}
+      >
+        {selectedToken && (
+          <div className="token-detail-modal">
+            <div className="token-detail-grid">
+              <div className="token-detail-item">
+                <label>Name:</label>
+                <span>{selectedToken.name}</span>
+              </div>
+              <div className="token-detail-item">
+                <label>Symbol:</label>
+                <span>{selectedToken.symbol}</span>
+              </div>
+              <div className="token-detail-item">
+                <label>Supply:</label>
+                <span>{selectedToken.supply}</span>
+              </div>
+              <div className="token-detail-item">
+                <label>Value:</label>
+                <span>{selectedToken.value}</span>
+              </div>
+              <div className="token-detail-item">
+                <label>Contract Address:</label>
+                <span className="contract-address">{selectedToken.address}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* View All Tokens Modal */}
+      <Modal
+        isOpen={showViewAllModal}
+        onClose={() => setShowViewAllModal(false)}
+        title="All Your Tokens"
+      >
+        <div className="all-tokens-modal">
+          {tokens.length > 0 ? (
+            <div className="tokens-grid">
+              {tokens.map((token, index) => (
+                <div key={index} className="token-card">
+                  <h4>{token.name}</h4>
+                  <p><strong>Symbol:</strong> {token.symbol}</p>
+                  <p><strong>Supply:</strong> {token.supply}</p>
+                  <p><strong>Value:</strong> {token.value}</p>
+                  <p><strong>Address:</strong> <span className="contract-address">{token.address}</span></p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-tokens-message">
+              <p>No tokens found. Create your first token using the Mint section!</p>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

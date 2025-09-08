@@ -46,6 +46,18 @@ function App() {
         </div>
       )}
       
+      {/* T-REX Deployer Section */}
+      <div className="trex-deployer-section">
+        <div className="container mx-auto px-6 py-8">
+          <div className="text-center">
+            <h4 className="trex-deployer-title">T-REX Deployer</h4>
+            <p className="trex-deployer-description">
+              Deploy ERC-3643 compliant security tokens on Polkadot with Tokeny's regulatory framework.
+            </p>
+          </div>
+        </div>
+      </div>
+      
       {/* Footer */}
       <Footer />
     </div>

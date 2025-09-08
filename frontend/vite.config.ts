@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   define: {
@@ -14,19 +14,15 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      crypto: 'crypto-browserify',
-      stream: 'stream-browserify',
-      buffer: 'buffer',
-      util: 'util',
-      process: 'process/browser',
-      events: 'events',
-      url: 'url',
-      querystring: 'querystring-es3',
-      path: 'path-browserify',
-      fs: false,
-      net: false,
-      tls: false,
-      child_process: false,
+      crypto: path.resolve(__dirname, 'node_modules/crypto-browserify'),
+      stream: path.resolve(__dirname, 'node_modules/stream-browserify'),
+      buffer: path.resolve(__dirname, 'node_modules/buffer'),
+      util: path.resolve(__dirname, 'node_modules/util'),
+      process: path.resolve(__dirname, 'node_modules/process/browser'),
+      events: path.resolve(__dirname, 'node_modules/events'),
+      url: path.resolve(__dirname, 'node_modules/url'),
+      querystring: path.resolve(__dirname, 'node_modules/querystring-es3'),
+      path: path.resolve(__dirname, 'node_modules/path-browserify'),
     }
   },
   optimizeDeps: {
@@ -42,26 +38,12 @@ export default defineConfig({
       'path-browserify',
       '@polkadot/extension-dapp',
       '@polkadot/util',
-      '@polkadot/util-crypto',
-      '@polkadot-auth/core',
-      '@polkadot-auth/ui'
-    ],
-    exclude: [
-      '@noble/hashes',
-      '@noble/secp256k1',
-      'tweetnacl',
-      'tweetnacl/nacl-fast'
+      '@polkadot/util-crypto'
     ]
   },
-  build: {
-    rollupOptions: {
-      external: (id) => {
-        // Exclude Node.js modules and crypto libraries from the bundle
-        if (id.startsWith('@noble/') || id.startsWith('tweetnacl')) {
-          return true;
-        }
-        return false;
-      }
+  server: {
+    hmr: {
+      overlay: false
     }
   }
 })

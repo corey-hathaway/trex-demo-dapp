@@ -33,12 +33,12 @@ interface NewHomepageProps {
 export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [networkTestResult, setNetworkTestResult] = useState<string | null>(null);
   const [deploymentTestResult, setDeploymentTestResult] = useState<string | null>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
+  const [showTestMenu, setShowTestMenu] = useState(false);
   const { toasts, removeToast, showSuccess, showError } = useToast();
 
   // Reusable function to load data
@@ -237,25 +237,69 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
   };
 
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => {
-      const newSlide = (prev + 1) % 5;
-      console.log('Next slide:', newSlide);
-      return newSlide;
-    });
+  // Test functions
+  const handleNetworkTest = async () => {
+    setIsTesting(true);
+    setNetworkTestResult(null);
+    try {
+      const networkInfo = await polkadotTREXDeploymentService.getNetworkInfo();
+      const factoryAvailable = await polkadotTREXDeploymentService.checkTREXFactoryAvailability();
+      const deploymentConfig = polkadotTREXDeploymentService.getDeploymentConfig();
+      
+      setNetworkTestResult(`✅ Connected to Paseo testnet!
+Chain: ${networkInfo?.chainName}
+Block: ${networkInfo?.blockNumber}
+Factory: ${factoryAvailable ? 'Available' : 'Not Available'}
+RPC: ${networkInfo?.rpcUrl}`);
+    } catch (error) {
+      setNetworkTestResult(`❌ Failed to connect to Paseo testnet: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsTesting(false);
+    }
   };
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => {
-      const newSlide = (prev - 1 + 5) % 5;
-      console.log('Prev slide:', newSlide);
-      return newSlide;
-    });
-  };
+  const handleDeploymentTest = async () => {
+    if (!walletAddress) {
+      setDeploymentTestResult('❌ Please connect your wallet first');
+      return;
+    }
+    
+    setIsTesting(true);
+    setDeploymentTestResult(null);
+    
+    try {
+      // First check extension availability
+      const extensionCheck = await polkadotTREXDeploymentService.checkExtensionAvailability();
+      if (!extensionCheck.available) {
+        setDeploymentTestResult(`❌ Extension Issue: ${extensionCheck.error}
+Available accounts: ${extensionCheck.accounts.length > 0 ? extensionCheck.accounts.join(', ') : 'None'}`);
+        return;
+      }
 
-  const goToSlide = (index: number) => {
-    console.log('Go to slide:', index);
-    setCurrentSlide(index);
+      const deploymentResult = await polkadotTREXDeploymentService.deployTREXToken({
+        name: 'Test Token',
+        symbol: 'TEST',
+        decimals: 0,
+        owner: walletAddress,
+        identityRegistry: '0x0000000000000000000000000000000000000000',
+        compliance: '0x0000000000000000000000000000000000000000',
+        onchainID: '0x0000000000000000000000000000000000000000'
+      });
+      
+      if (deploymentResult.success) {
+        setDeploymentTestResult(`✅ Test token deployed successfully!
+Contract: ${deploymentResult.contractAddress}
+Transaction: ${deploymentResult.transactionHash}
+Network: Paseo Testnet (Passet Hub)
+Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deploymentResult.transactionHash}`);
+      } else {
+        setDeploymentTestResult(`❌ Deployment failed: ${deploymentResult.error}`);
+      }
+    } catch (error) {
+      setDeploymentTestResult(`❌ Failed to deploy test token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   return (
@@ -269,187 +313,102 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
         <p>Deploy ERC-3643 compliant security tokens on Polkadot with Tokeny's regulatory framework.</p>
       </div>
 
-      {/* Action Cards Carousel */}
-      <div className="action-cards-carousel">
-        <div className="carousel-container">
-          <div className="carousel-track">
-            {currentSlide === 0 && (
-              <div className="carousel-item">
-                <div className="homepage-section">
-                  <div className="section-header">
-                    <h3>🌐 Network Connectivity</h3>
-                    <p>Test connection to Paseo testnet (Passet Hub)</p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      setIsTesting(true);
-                      setNetworkTestResult(null);
-                      try {
-                        const networkInfo = await polkadotTREXDeploymentService.getNetworkInfo();
-                        const factoryAvailable = await polkadotTREXDeploymentService.checkTREXFactoryAvailability();
-                        const deploymentConfig = polkadotTREXDeploymentService.getDeploymentConfig();
-                        
-                        setNetworkTestResult(`✅ Connected to Paseo testnet!
-Chain: ${networkInfo?.chainName}
-Block: ${networkInfo?.blockNumber}
-Factory: ${factoryAvailable ? 'Available' : 'Not Available'}
-RPC: ${networkInfo?.rpcUrl}`);
-                      } catch (error) {
-                        setNetworkTestResult(`❌ Failed to connect to Paseo testnet: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                      } finally {
-                        setIsTesting(false);
-                      }
-                    }}
-                    disabled={isTesting}
-                    className="btn-primary"
-                  >
-                    {isTesting ? 'Testing...' : 'Test Network Connectivity'}
-                  </button>
-                  
-                  {networkTestResult && (
-                    <div className="test-result" style={{
-                      marginTop: '16px',
-                      padding: '12px',
-                      backgroundColor: networkTestResult.startsWith('✅') ? '#f0f9ff' : '#fef2f2',
-                      border: `1px solid ${networkTestResult.startsWith('✅') ? '#0ea5e9' : '#ef4444'}`,
-                      borderRadius: '6px',
-                      color: networkTestResult.startsWith('✅') ? '#0c4a6e' : '#991b1b',
-                      fontFamily: 'monospace',
-                      fontSize: '14px',
-                      whiteSpace: 'pre-line'
-                    }}>
-                      {networkTestResult}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {currentSlide === 1 && (
-              <div className="carousel-item">
-                <div className="homepage-section">
-                  <div className="section-header">
-                    <h3>🚀 Token Deployment</h3>
-                    <p>Test real T-REX token deployment with your wallet</p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      if (!walletAddress) {
-                        setDeploymentTestResult('❌ Please connect your wallet first');
-                        return;
-                      }
-                      
-                      setIsTesting(true);
-                      setDeploymentTestResult(null);
-                      
-                      try {
-                        // First check extension availability
-                        const extensionCheck = await polkadotTREXDeploymentService.checkExtensionAvailability();
-                        if (!extensionCheck.available) {
-                          setDeploymentTestResult(`❌ Extension Issue: ${extensionCheck.error}
-Available accounts: ${extensionCheck.accounts.length > 0 ? extensionCheck.accounts.join(', ') : 'None'}`);
-                          return;
-                        }
+      {/* Test Menu Button */}
+      <div className="test-menu-section">
+        <button 
+          className="test-menu-btn"
+          onClick={() => setShowTestMenu(!showTestMenu)}
+        >
+          🧪 Test Menu {showTestMenu ? '▼' : '▶'}
+        </button>
+      </div>
 
-                        const deploymentResult = await polkadotTREXDeploymentService.deployTREXToken({
-                          name: 'Test Token',
-                          symbol: 'TEST',
-                          decimals: 0,
-                          owner: walletAddress,
-                          identityRegistry: '0x0000000000000000000000000000000000000000',
-                          compliance: '0x0000000000000000000000000000000000000000',
-                          onchainID: '0x0000000000000000000000000000000000000000'
-                        });
-                        
-                        if (deploymentResult.success) {
-                          setDeploymentTestResult(`✅ Test token deployed successfully!
-Contract: ${deploymentResult.contractAddress}
-Transaction: ${deploymentResult.transactionHash}
-Network: Paseo Testnet (Passet Hub)
-Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deploymentResult.transactionHash}`);
-                        } else {
-                          setDeploymentTestResult(`❌ Deployment failed: ${deploymentResult.error}`);
-                        }
-                      } catch (error) {
-                        setDeploymentTestResult(`❌ Failed to deploy test token: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                      } finally {
-                        setIsTesting(false);
-                      }
-                    }}
-                    disabled={!walletAddress || isTesting}
-                    className="btn-secondary"
-                  >
-                    {!walletAddress ? 'Connect Wallet First' : isTesting ? (
-                      <>
-                        <span className="spinner"></span>
-                        Testing...
-                      </>
-                    ) : 'Test Token Deployment'}
-                  </button>
-                  
-                  {deploymentTestResult && (
-                    <div className="test-result" style={{
-                      marginTop: '16px',
-                      padding: '12px',
-                      backgroundColor: deploymentTestResult.startsWith('✅') ? '#f0f9ff' : '#fef2f2',
-                      border: `1px solid ${deploymentTestResult.startsWith('✅') ? '#0ea5e9' : '#ef4444'}`,
-                      borderRadius: '6px',
-                      color: deploymentTestResult.startsWith('✅') ? '#0c4a6e' : '#991b1b',
-                      fontFamily: 'monospace',
-                      fontSize: '14px',
-                      whiteSpace: 'pre-line'
-                    }}>
-                      {deploymentTestResult}
-                    </div>
-                  )}
+      {/* Test Menu */}
+      {showTestMenu && (
+        <div className="test-menu">
+          <div className="test-cards-grid">
+            {/* Network Test Card */}
+            <div className="test-card">
+              <div className="test-card-header">
+                <h3>🌐 Network Connectivity</h3>
+                <p>Test connection to Paseo testnet (Passet Hub)</p>
+              </div>
+              <button
+                onClick={handleNetworkTest}
+                disabled={isTesting}
+                className="test-btn"
+              >
+                {isTesting ? 'Testing...' : 'Test Network Connectivity'}
+              </button>
+              
+              {networkTestResult && (
+                <div className="test-result" style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  backgroundColor: networkTestResult.startsWith('✅') ? '#f0f9ff' : '#fef2f2',
+                  border: `1px solid ${networkTestResult.startsWith('✅') ? '#0ea5e9' : '#ef4444'}`,
+                  borderRadius: '6px',
+                  color: networkTestResult.startsWith('✅') ? '#0c4a6e' : '#991b1b',
+                  fontFamily: 'monospace',
+                  fontSize: '14px',
+                  whiteSpace: 'pre-line'
+                }}>
+                  {networkTestResult}
                 </div>
-              </div>
-            )}
-            
-            {currentSlide === 2 && (
-              <div className="carousel-item">
-                <MintSection onDeployToken={handleDeployToken} onTokenCreated={loadData} walletAddress={walletAddress} />
-              </div>
-            )}
-            
-            {currentSlide === 3 && (
-              <div className="carousel-item">
-                <TransferSection tokens={tokens} onTransfer={handleTransfer} />
-              </div>
-            )}
-            
-            {currentSlide === 4 && (
-              <div className="carousel-item">
-                <DeployTokenSection onDeployToken={handleDeployToken} isDeploying={isDeploying} />
-              </div>
-            )}
-          </div>
-          
-          {/* Carousel Navigation */}
-          <div className="carousel-navigation">
-            <button className="carousel-btn carousel-btn-prev" onClick={prevSlide}>
-              ‹
-            </button>
-            <div className="carousel-dots">
-              {[
-                { index: 0, label: 'Network' },
-                { index: 1, label: 'Deploy' },
-                { index: 2, label: 'Mint' },
-                { index: 3, label: 'Transfer' },
-                { index: 4, label: 'Deploy' }
-              ].map(({ index, label }) => (
-                <button
-                  key={index}
-                  className={`carousel-dot ${currentSlide === index ? 'active' : ''}`}
-                  onClick={() => goToSlide(index)}
-                  title={label}
-                />
-              ))}
+              )}
             </div>
-            <button className="carousel-btn carousel-btn-next" onClick={nextSlide}>
-              ›
-            </button>
+
+            {/* Deployment Test Card */}
+            <div className="test-card">
+              <div className="test-card-header">
+                <h3>🚀 Token Deployment</h3>
+                <p>Test real T-REX token deployment with your wallet</p>
+              </div>
+              <button
+                onClick={handleDeploymentTest}
+                disabled={!walletAddress || isTesting}
+                className="test-btn"
+              >
+                {!walletAddress ? 'Connect Wallet First' : isTesting ? (
+                  <>
+                    <span className="spinner"></span>
+                    Testing...
+                  </>
+                ) : 'Test Token Deployment'}
+              </button>
+              
+              {deploymentTestResult && (
+                <div className="test-result" style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  backgroundColor: deploymentTestResult.startsWith('✅') ? '#f0f9ff' : '#fef2f2',
+                  border: `1px solid ${deploymentTestResult.startsWith('✅') ? '#0ea5e9' : '#ef4444'}`,
+                  borderRadius: '6px',
+                  color: deploymentTestResult.startsWith('✅') ? '#0c4a6e' : '#991b1b',
+                  fontFamily: 'monospace',
+                  fontSize: '14px',
+                  whiteSpace: 'pre-line'
+                }}>
+                  {deploymentTestResult}
+                </div>
+              )}
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Main Action Cards */}
+      <div className="main-action-cards">
+        <div className="action-card">
+          <DeployTokenSection onDeployToken={handleDeployToken} isDeploying={isDeploying} />
+        </div>
+        
+        <div className="action-card">
+          <MintSection onDeployToken={handleDeployToken} onTokenCreated={loadData} walletAddress={walletAddress} />
+        </div>
+        
+        <div className="action-card">
+          <TransferSection tokens={tokens} onTransfer={handleTransfer} />
         </div>
       </div>
 

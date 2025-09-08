@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { usePolkadotAuth } from '@polkadot-auth/ui';
 import WalletSelector from './WalletSelector';
 
@@ -73,7 +74,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
       // Use the real polkadot-sso signIn function with Nova wallet support
       if (signIn && typeof signIn === 'function') {
         // Try Nova wallet first, then fallback to polkadot-js
-        const result = await signIn('nova');
+        const result = await signIn('nova-wallet');
         console.log('PolkadotAuth - Real polkadot-sso signIn result:', result);
         
         // Check if the hook updated properly after connection
@@ -190,7 +191,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
       )}
 
       {/* Wallet Selector Modal */}
-      {showWalletSelector && (
+      {showWalletSelector && createPortal(
         <div className="wallet-modal-overlay" onClick={() => setShowWalletSelector(false)}>
           <div className="wallet-modal" onClick={(e) => e.stopPropagation()}>
             <div className="wallet-modal-header">
@@ -210,7 +211,8 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
               onDisconnect={onDisconnect || (() => {})}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

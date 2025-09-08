@@ -20,19 +20,19 @@ interface PolkadotAuthProps {
 
 const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnect, hideConnectedState = false, onSignOutReady }) => {
   const authContext = usePolkadotAuth() as any;
-  const { isConnected, address, session, connect, disconnect } = authContext;
+  const { isConnected, address, accountName, session, signIn, signOut } = authContext;
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('PolkadotAuth - Connection state changed:', { isConnected, address, session: !!session });
+    console.log('PolkadotAuth - Connection state changed:', { isConnected, address, accountName, session: !!session });
     if (isConnected && address && session && onConnect) {
-      // Since polkadot-sso doesn't provide accountName, use a formatted address as display name
-      const displayName = `Account ${address.slice(0, 6)}...${address.slice(-4)}`;
+      // Use accountName if available, otherwise use a formatted address as fallback
+      const displayName = accountName || `Account ${address.slice(0, 6)}...${address.slice(-4)}`;
       console.log('PolkadotAuth - Calling onConnect with:', { address, accountName: displayName });
       onConnect(address, displayName, session);
     }
-  }, [isConnected, address, session, onConnect]);
+  }, [isConnected, address, accountName, session, onConnect]);
 
   useEffect(() => {
     if (onSignOutReady) {
@@ -44,7 +44,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
     try {
       setIsConnecting(true);
       setError(null);
-      await connect('polkadot-js');
+      await signIn();
     } catch (err) {
       console.error('Sign in error:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign in');
@@ -55,7 +55,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
 
   const handleSignOut = async () => {
     try {
-      await disconnect();
+      await signOut();
       if (onDisconnect) {
         onDisconnect();
       }
@@ -91,13 +91,13 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <button
-        onClick={handleSignIn}
+      <PolkadotSignInButton
+        onSignIn={handleSignIn}
         disabled={isConnecting}
         className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
       >
         {isConnecting ? 'Connecting...' : 'Connect Polkadot Wallet'}
-      </button>
+      </PolkadotSignInButton>
       
       {error && (
         <div className="text-red-500 text-sm text-center">

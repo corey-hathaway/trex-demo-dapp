@@ -1,51 +1,152 @@
-import React from 'react';
-import { usePolkadotAuth } from '@polkadot-auth/ui';
-import WalletSelector from './WalletSelector';
+import React, { useState, useEffect } from 'react';
 
-const Dashboard = () => {
-  const { isConnected, address, session } = usePolkadotAuth();
+interface TokenData {
+  name: string;
+  symbol: string;
+  totalSupply: string;
+  contractAddress: string;
+  holderCount: number;
+  lastUpdated: string;
+  assetValue: string;
+}
 
-  if (!isConnected) {
+interface DashboardProps {
+  walletAddress: string | null;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ walletAddress }) => {
+  const [tokenData, setTokenData] = useState<TokenData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Mock data for demonstration - in real app this would come from blockchain
+  useEffect(() => {
+    const mockTokenData: TokenData = {
+      name: "TREXDINO",
+      symbol: "TREX",
+      totalSupply: "500 TREX",
+      contractAddress: "0xEC69d4f48f4f1740976968FAb9828d645Ad1d77f",
+      holderCount: 3,
+      lastUpdated: "2 hours ago",
+      assetValue: "$500,000"
+    };
+
+    // Simulate loading
+    setTimeout(() => {
+      setTokenData(mockTokenData);
+      setIsLoading(false);
+    }, 1000);
+  }, []);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // You could add a toast notification here
+  };
+
+  if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-3xl font-bold mb-4">T-REX Asset Dashboard</h2>
-        <p className="text-gray-400 mb-8">
-          Connect your wallet to view and manage your deployed tokens
-        </p>
-        <WalletSelector />
+      <div className="dashboard-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading asset data...</p>
+      </div>
+    );
+  }
+
+  if (!tokenData) {
+    return (
+      <div className="dashboard-error">
+        <h2>No Asset Data Found</h2>
+        <p>Please deploy a token first or check your connection.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">Welcome to T-REX Dashboard</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-700 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">Connected Wallet</h3>
-            <p className="font-mono text-sm text-blue-400">{address}</p>
-          </div>
-          <div className="bg-gray-700 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">Session ID</h3>
-            <p className="font-mono text-sm text-green-400">{session?.id}</p>
-          </div>
-          <div className="bg-gray-700 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">Status</h3>
-            <p className="text-green-400">✅ Authenticated</p>
-          </div>
-        </div>
+    <div className="dashboard">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Asset Dashboard</h1>
+        <p className="dashboard-subtitle">View and manage your tokenized asset details</p>
       </div>
 
-      {/* Your existing T-REX dashboard content */}
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-bold mb-4">Deployed Tokens</h3>
-        <p className="text-gray-400">
-          Your deployed ERC-3643 tokens will appear here...
-        </p>
-      </div>
+      {walletAddress ? (
+        <div className="dashboard-grid">
+          {/* Asset Overview Card */}
+          <div className="dashboard-card asset-overview">
+            <div className="card-header">
+              <h3>Asset Overview</h3>
+              <div className="asset-badge">{tokenData.symbol}</div>
+            </div>
+            <div className="asset-details">
+              <div className="asset-name">{tokenData.name}</div>
+              <div className="asset-symbol">{tokenData.symbol}</div>
+              <div className="asset-supply">
+                <span className="label">Total Supply:</span>
+                <span className="value">{tokenData.totalSupply}</span>
+              </div>
+            </div>
+          </div>
+
+        {/* Contract Information */}
+        <div className="dashboard-card contract-info">
+          <h3>Smart Contract</h3>
+          <div className="contract-address">
+            <span className="label">Contract Address:</span>
+            <div className="address-container">
+              <code className="address">{tokenData.contractAddress}</code>
+              <button 
+                className="copy-button"
+                onClick={() => copyToClipboard(tokenData.contractAddress)}
+                title="Copy to clipboard"
+              >
+                📋
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Statistics */}
+        <div className="dashboard-card statistics">
+          <h3>Statistics</h3>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <span className="stat-label">Current Holders</span>
+              <span className="stat-value">{tokenData.holderCount}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Asset Value</span>
+              <span className="stat-value">{tokenData.assetValue}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Last Updated</span>
+              <span className="stat-value">{tokenData.lastUpdated}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Token Distribution Chart Placeholder */}
+        <div className="dashboard-card chart-container">
+          <h3>Token Distribution</h3>
+          <div className="chart-placeholder">
+            <div className="chart-icon">📊</div>
+            <p>Distribution chart coming soon</p>
+            <p className="chart-note">Visual representation of token holder distribution</p>
+          </div>
+        </div>
+
+          {/* Quick Actions */}
+          <div className="dashboard-actions">
+            <button className="btn-primary">View on Explorer</button>
+            <button className="btn-secondary">Export Data</button>
+            <button className="btn-secondary">Manage Permissions</button>
+          </div>
+        </div>
+      ) : (
+        <div className="connect-wallet-prompt">
+          <div className="prompt-content">
+            <h3>Connect Your Wallet</h3>
+            <p>Please connect your Polkadot wallet to view your asset details and manage your tokens.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-export default Dashboard;

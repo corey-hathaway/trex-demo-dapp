@@ -68,9 +68,10 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
       
       console.log('PolkadotAuth - Starting real polkadot-sso connection...');
       
-      // Use the real polkadot-sso signIn function
+      // Use the real polkadot-sso signIn function with Nova wallet support
       if (signIn && typeof signIn === 'function') {
-        const result = await signIn('polkadot-js');
+        // Try Nova wallet first, then fallback to polkadot-js
+        const result = await signIn('nova-wallet');
         console.log('PolkadotAuth - Real polkadot-sso signIn result:', result);
         
         // Check if the hook updated properly after connection
@@ -176,7 +177,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
         disabled={isConnecting}
         className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
       >
-        {isConnecting ? 'Connecting...' : 'Connect Polkadot Wallet'}
+        {isConnecting ? 'Connecting...' : 'Connect Nova Wallet'}
       </PolkadotSignInButton>
       
       {(error || localError) && (

@@ -1,69 +1,97 @@
-import React from 'react';
-import { usePolkadotAuth } from '@polkadot-auth/ui';
+import React, { useRef } from 'react';
+import PolkadotAuth from './PolkadotAuth';
 
-const Navigation = () => {
-  const {
-    isConnected,
-    address,
-    connect,
-    disconnect,
-    isLoading,
-    error
-  } = usePolkadotAuth();
+interface NavigationProps {
+  currentPage: 'home' | 'dashboard';
+  onPageChange: (page: 'home' | 'dashboard') => void;
+  walletAddress: string | null;
+  walletName: string | null;
+  onWalletConnect: (address: string, accountName: string, session: any) => void;
+  onWalletDisconnect: () => void;
+}
+
+export const Navigation: React.FC<NavigationProps> = ({ 
+  currentPage, 
+  onPageChange, 
+  walletAddress, 
+  walletName,
+  onWalletConnect, 
+  onWalletDisconnect 
+}) => {
+  console.log('Navigation - walletAddress:', walletAddress);
+  console.log('Navigation - walletName:', walletName);
+  const [signOutFn, setSignOutFn] = React.useState<(() => Promise<void>) | null>(null);
+
+  React.useEffect(() => {
+    console.log('Navigation - signOutFn state changed:', signOutFn);
+    console.log('Navigation - signOutFn type:', typeof signOutFn);
+  }, [signOutFn]);
+
+  const handleSignOutReady = (fn: () => Promise<void>) => {
+    console.log('Navigation - handleSignOutReady called with:', fn);
+    console.log('Navigation - fn type:', typeof fn);
+    setSignOutFn(fn);
+  };
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const handleDisconnect = async () => {
+    console.log('Navigation - handleDisconnect called');
+    console.log('Navigation - signOutFn:', signOutFn);
+    console.log('Navigation - signOutFn type:', typeof signOutFn);
+    
+    try {
+      if (signOutFn && typeof signOutFn === 'function') {
+        console.log('Navigation - Calling signOutFn...');
+        await signOutFn();
+        console.log('Navigation - signOutFn completed');
+      } else {
+        console.log('Navigation - No valid signOutFn available, calling onWalletDisconnect directly');
+      }
+    } catch (err) {
+      console.error('Navigation - Error during signOutFn:', err);
+    }
+    
+    console.log('Navigation - Calling onWalletDisconnect...');
+    onWalletDisconnect();
+    console.log('Navigation - onWalletDisconnect completed');
+  };
 
   return (
-    <nav className="bg-gray-800 shadow-lg">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
-          {/* T-REX Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">T</span>
-            </div>
-            <span className="text-xl font-bold">T-REX Demo</span>
-          </div>
-
-          {/* Navigation Links */}
-          <div className="hidden md:flex space-x-6">
-            <a href="#dashboard" className="hover:text-blue-400 transition-colors">
-              Asset Dashboard
-            </a>
-            <a href="#deploy" className="hover:text-blue-400 transition-colors">
-              Deploy Contracts
-            </a>
-          </div>
-
-          {/* Wallet Connection */}
-          <div className="flex items-center space-x-4">
-            {isConnected ? (
-              <div className="flex items-center space-x-3">
-                <div className="text-sm">
-                  <div className="text-gray-300">Connected</div>
-                  <div className="font-mono text-xs">
-                    {address?.slice(0, 6)}...{address?.slice(-4)}
-                  </div>
-                </div>
-                <button
-                  onClick={disconnect}
-                  className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition-colors"
+    <nav className="main-navigation">
+      <div className="nav-container">
+        <div className="nav-brand" onClick={() => onPageChange('home')}>
+          <span className="brand-text">TokenyDemoDApp</span>
+        </div>
+        
+        <div className="nav-right">
+          {/* Wallet Status */}
+          <div className="wallet-status">
+            {walletAddress ? (
+              <div className="wallet-connected">
+                <span className="wallet-address">
+                  {walletName ? walletName : formatAddress(walletAddress)}
+                </span>
+                <button 
+                  className="nav-item disconnect-btn"
+                  onClick={() => {
+                    console.log('Navigation - Disconnect button clicked');
+                    handleDisconnect();
+                  }}
                 >
                   Disconnect
                 </button>
               </div>
             ) : (
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => connect('polkadot-js')}
-                  disabled={isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm transition-colors disabled:opacity-50"
-                >
-                  {isLoading ? 'Connecting...' : 'Connect Wallet'}
-                </button>
-                {error && (
-                  <div className="text-red-400 text-xs">
-                    {error.message}
-                  </div>
-                )}
+              <div className="wallet-disconnected">
+                <PolkadotAuth 
+                  onConnect={onWalletConnect}
+                  onDisconnect={onWalletDisconnect}
+                  hideConnectedState={true}
+                  onSignOutReady={handleSignOutReady}
+                />
               </div>
             )}
           </div>
@@ -72,5 +100,3 @@ const Navigation = () => {
     </nav>
   );
 };
-
-export default Navigation;

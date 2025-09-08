@@ -5,7 +5,15 @@
 /**
  *
  */
-export const agentManagerAbi = [] as const
+export const agentManagerAbi = [
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getAgent',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+] as const
 
 /**
  *

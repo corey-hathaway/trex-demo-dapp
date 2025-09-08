@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
-import { trustedIssuersRegistryAbi } from '../generated';
+// // import { trustedIssuersRegistryAbi } from '../generated';
 
 interface TrustedIssuer {
   address: string;

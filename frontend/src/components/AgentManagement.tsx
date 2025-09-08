@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAccount, useDeployContract, useWaitForTransactionReceipt } from 'wagmi';
-import { agentManagerAbi } from '../generated';
+// import { agentManagerAbi } from '../generated';
 import { loadAgentManagerBytecode } from '../utils/loadContractBytecode';
 import { uploadAgentManagerBytecode } from '../utils/polkadotDeployment';
 

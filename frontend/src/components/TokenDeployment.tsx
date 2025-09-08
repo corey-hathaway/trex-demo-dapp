@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAccount, useDeployContract, useWaitForTransactionReceipt } from 'wagmi';
-import { tokenproxyAbi } from '../generated';
+// import { tokenproxyAbi } from '../generated';
 import { loadTokenProxyBytecode } from '../utils/loadContractBytecode';
 import { getDeploymentConfig, validateDeploymentConfig } from '../utils/deploymentConfig';
 

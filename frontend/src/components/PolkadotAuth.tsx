@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPolkadotAuth } from '@polkadot-auth/core';
 import { PolkadotAuthProvider, PolkadotSignInButton, usePolkadotAuth } from '@polkadot-auth/ui';
-import { web3Enable, web3Accounts } from '@polkadot/extension-dapp';
 
 // Type aliases for better readability
 type WalletProvider = any;
@@ -21,118 +20,130 @@ interface PolkadotAuthProps {
 
 const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnect, hideConnectedState = false, onSignOutReady }) => {
   const authContext = usePolkadotAuth() as any;
-  const { signIn, signOut } = authContext;
+  console.log('PolkadotAuth - Full authContext:', JSON.stringify(authContext, null, 2));
+  
+  // Use the correct properties from the polkadot-sso hook
+  const { signIn, signOut, isConnected, address, session, isLoading, error } = authContext;
+  console.log('PolkadotAuth - signIn:', signIn);
+  console.log('PolkadotAuth - signOut:', signOut);
+  console.log('PolkadotAuth - isConnected:', isConnected);
+  console.log('PolkadotAuth - address:', address);
+  console.log('PolkadotAuth - session:', session);
+  console.log('PolkadotAuth - isLoading:', isLoading);
+  console.log('PolkadotAuth - error:', error);
+  
+  // Log all available properties from authContext
+  console.log('PolkadotAuth - All authContext keys:', Object.keys(authContext || {}));
+  
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [address, setAddress] = useState<string | null>(null);
-  const [accountName, setAccountName] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
+  // Handle connection state changes
   useEffect(() => {
-    console.log('PolkadotAuth - Connection state changed:', { isConnected, address, accountName });
+    console.log('PolkadotAuth - Connection state changed:', { isConnected, address, session });
+    console.log('PolkadotAuth - onConnect callback:', onConnect);
     if (isConnected && address && onConnect) {
-      // Use accountName if available, otherwise use a formatted address as fallback
-      const displayName = accountName || `Account ${address.slice(0, 6)}...${address.slice(-4)}`;
-      console.log('PolkadotAuth - Calling onConnect with:', { address, accountName: displayName });
-      onConnect(address, displayName, { account: { address, meta: { name: accountName } } });
-    }
-  }, [isConnected, address, accountName, onConnect]);
-
-  // Check for existing connection on mount
-  useEffect(() => {
-    const checkExistingConnection = async () => {
+      // Extract account name from session or use formatted address as fallback
+      const accountName = session?.accountName || `Account ${address.slice(0, 6)}...${address.slice(-4)}`;
+      console.log('PolkadotAuth - Calling onConnect with:', { address, accountName, session });
       try {
-        const extensions = await web3Enable('T-REX Demo dApp');
-        if (extensions.length === 0) return;
-
-        const accounts = await web3Accounts();
-        if (accounts.length > 0 && !isConnected) {
-          const account = accounts[0];
-          const realAccountName = account.meta.name || `Account ${account.address.slice(0, 6)}...${account.address.slice(-4)}`;
-          
-          // Set local state
-          setAddress(account.address);
-          setAccountName(realAccountName);
-          setIsConnected(true);
-        }
+        onConnect(address, accountName, session || { account: { address, meta: { name: accountName } } });
+        console.log('PolkadotAuth - onConnect call completed successfully');
       } catch (err) {
-        console.error('Error checking existing connection:', err);
+        console.error('PolkadotAuth - Error calling onConnect:', err);
       }
-    };
-
-    checkExistingConnection();
-  }, [onConnect, isConnected]);
-
-  useEffect(() => {
-    if (onSignOutReady) {
-      onSignOutReady(handleSignOut);
+    } else {
+      console.log('PolkadotAuth - Not calling onConnect because:', { 
+        isConnected, 
+        hasAddress: !!address, 
+        hasOnConnect: !!onConnect 
+      });
     }
-  }, [onSignOutReady, handleSignOut]);
+  }, [isConnected, address, session, onConnect]);
 
   const handleSignIn = async () => {
     try {
       setIsConnecting(true);
-      setError(null);
+      setLocalError(null);
       
-      // Use real Polkadot.js Extension instead of mock signIn
-      const extensions = await web3Enable('T-REX Demo dApp');
-      if (extensions.length === 0) {
-        throw new Error('No Polkadot.js Extension found. Please install the extension.');
+      console.log('PolkadotAuth - Starting real polkadot-sso connection...');
+      
+      // Use the real polkadot-sso signIn function
+      if (signIn && typeof signIn === 'function') {
+        const result = await signIn('polkadot-js');
+        console.log('PolkadotAuth - Real polkadot-sso signIn result:', result);
+        
+        // Check if the hook updated properly after connection
+        setTimeout(() => {
+          console.log('PolkadotAuth - Post-connection state check:', { 
+            isConnected, 
+            address, 
+            accountName: session?.accountName || `Account ${address.slice(0, 6)}...${address.slice(-4)}`,
+            authContext 
+          });
+          
+          // If the hook didn't update, try to get the connection info directly
+          if (!isConnected || !address) {
+            console.log('PolkadotAuth - Hook state not updated, checking authContext for connection info...');
+            if (authContext && authContext.session) {
+              console.log('PolkadotAuth - Found session in authContext:', authContext.session);
+              // Try to extract connection info from the session
+              if (authContext.session.address && onConnect) {
+                const displayName = authContext.session.accountName || `Account ${authContext.session.address.slice(0, 6)}...${authContext.session.address.slice(-4)}`;
+                console.log('PolkadotAuth - Calling onConnect with session data:', { address: authContext.session.address, accountName: displayName });
+                onConnect(authContext.session.address, displayName, authContext.session);
+              }
+            }
+          }
+        }, 1000);
+        
+        console.log('PolkadotAuth - Real polkadot-sso signIn successful');
+      } else {
+        throw new Error('SignIn function not available from polkadot-sso');
       }
-
-      const accounts = await web3Accounts();
-      if (accounts.length === 0) {
-        throw new Error('No accounts found. Please create an account in the Polkadot.js Extension.');
-      }
-
-      // Use the first account
-      const account = accounts[0];
-      const realAccountName = account.meta.name || `Account ${account.address.slice(0, 6)}...${account.address.slice(-4)}`;
-      
-      // Set local state
-      setAddress(account.address);
-      setAccountName(realAccountName);
-      setIsConnected(true);
-      
-      // Call the polkadot-sso signIn to maintain the session structure
-      await signIn();
     } catch (err) {
       console.error('Sign in error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sign in');
+      setLocalError(err instanceof Error ? err.message : 'Failed to sign in');
     } finally {
       setIsConnecting(false);
     }
   };
 
   const handleSignOut = useCallback(async () => {
-    console.log('Disconnect button clicked - starting sign out process');
+    console.log('PolkadotAuth - handleSignOut called - Using real polkadot-sso signOut');
+    
     try {
-      // Call polkadot-sso signOut
-      console.log('Calling polkadot-sso signOut...');
-      await signOut();
-      console.log('Polkadot-sso signOut completed');
-      
-      // Clear local state
-      console.log('Clearing local state...');
-      setAddress(null);
-      setAccountName(null);
-      setIsConnected(false);
-      console.log('Local state cleared');
-      
-      // Only call onDisconnect if we're not hiding the connected state
-      // (i.e., if we're showing our own disconnect button)
-      if (onDisconnect && !hideConnectedState) {
-        console.log('Calling onDisconnect callback...');
-        onDisconnect();
-        console.log('onDisconnect callback completed');
+      // Use the real polkadot-sso signOut function
+      if (signOut && typeof signOut === 'function') {
+        await signOut();
+        console.log('PolkadotAuth - Real polkadot-sso signOut successful');
       } else {
-        console.log('Not calling onDisconnect - hideConnectedState is true or no callback provided');
+        console.log('PolkadotAuth - SignOut function not available, calling onDisconnect directly');
+        if (onDisconnect) {
+          onDisconnect();
+        }
       }
     } catch (err) {
-      console.error('Sign out error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sign out');
+      console.error('SignOut error:', err);
+      // Fallback to calling onDisconnect directly
+      if (onDisconnect) {
+        onDisconnect();
+      }
     }
-  }, [signOut, onDisconnect, hideConnectedState]);
+  }, [signOut, onDisconnect]);
+
+  useEffect(() => {
+    console.log('PolkadotAuth - onSignOutReady useEffect triggered');
+    console.log('PolkadotAuth - onSignOutReady:', onSignOutReady);
+    console.log('PolkadotAuth - handleSignOut:', handleSignOut);
+    if (onSignOutReady) {
+      console.log('PolkadotAuth - Calling onSignOutReady with handleSignOut...');
+      onSignOutReady(handleSignOut);
+      console.log('PolkadotAuth - onSignOutReady call completed');
+    } else {
+      console.log('PolkadotAuth - No onSignOutReady callback provided');
+    }
+  }, [onSignOutReady, handleSignOut]);
 
   if (isConnected && address && !hideConnectedState) {
     return (
@@ -168,9 +179,9 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
         {isConnecting ? 'Connecting...' : 'Connect Polkadot Wallet'}
       </PolkadotSignInButton>
       
-      {error && (
+      {(error || localError) && (
         <div className="text-red-500 text-sm text-center">
-          {error}
+          {error || localError}
         </div>
       )}
     </div>

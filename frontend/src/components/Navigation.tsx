@@ -22,15 +22,41 @@ export const Navigation: React.FC<NavigationProps> = ({
   console.log('Navigation - walletName:', walletName);
   const [signOutFn, setSignOutFn] = React.useState<(() => Promise<void>) | null>(null);
 
+  React.useEffect(() => {
+    console.log('Navigation - signOutFn state changed:', signOutFn);
+    console.log('Navigation - signOutFn type:', typeof signOutFn);
+  }, [signOutFn]);
+
+  const handleSignOutReady = (fn: () => Promise<void>) => {
+    console.log('Navigation - handleSignOutReady called with:', fn);
+    console.log('Navigation - fn type:', typeof fn);
+    setSignOutFn(fn);
+  };
+
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   const handleDisconnect = async () => {
-    if (signOutFn) {
-      await signOutFn();
+    console.log('Navigation - handleDisconnect called');
+    console.log('Navigation - signOutFn:', signOutFn);
+    console.log('Navigation - signOutFn type:', typeof signOutFn);
+    
+    try {
+      if (signOutFn && typeof signOutFn === 'function') {
+        console.log('Navigation - Calling signOutFn...');
+        await signOutFn();
+        console.log('Navigation - signOutFn completed');
+      } else {
+        console.log('Navigation - No valid signOutFn available, calling onWalletDisconnect directly');
+      }
+    } catch (err) {
+      console.error('Navigation - Error during signOutFn:', err);
     }
+    
+    console.log('Navigation - Calling onWalletDisconnect...');
     onWalletDisconnect();
+    console.log('Navigation - onWalletDisconnect completed');
   };
 
   return (
@@ -50,7 +76,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </span>
                 <button 
                   className="nav-item disconnect-btn"
-                  onClick={handleDisconnect}
+                  onClick={() => {
+                    console.log('Navigation - Disconnect button clicked');
+                    handleDisconnect();
+                  }}
                 >
                   Disconnect
                 </button>
@@ -61,7 +90,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                   onConnect={onWalletConnect}
                   onDisconnect={onWalletDisconnect}
                   hideConnectedState={true}
-                  onSignOutReady={setSignOutFn}
+                  onSignOutReady={handleSignOutReady}
                 />
               </div>
             )}

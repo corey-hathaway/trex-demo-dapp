@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { tokenAbi } from '../generated';
+// import { tokenAbi } from '../generated';
 
 interface MintingForm {
   tokenAddress: string;

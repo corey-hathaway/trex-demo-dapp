@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
-import { identityRegistryAbi } from '../generated';
+// import { identityRegistryAbi } from '../generated';
 
 interface Props {
   tokenAddress?: string;

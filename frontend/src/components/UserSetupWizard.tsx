@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useChainId } from 'wagmi';
-import { identityImplementationAbi, claimTopicsRegistryAbi, trustedIssuersRegistryAbi, identityRegistryAbi, claimIssuerContractAbi } from '../generated';
+// import { identityImplementationAbi, claimTopicsRegistryAbi, trustedIssuersRegistryAbi, identityRegistryAbi, claimIssuerContractAbi } from '../generated';
 import { keccak256, toBytes, encodePacked, Hex } from 'viem';
 
 // Types and Interfaces

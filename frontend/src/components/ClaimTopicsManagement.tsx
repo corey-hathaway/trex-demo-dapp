@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
-import { claimTopicsRegistryAbi } from '../generated';
+// import { claimTopicsRegistryAbi } from '../generated';
 import { keccak256, toBytes } from 'viem';
 
 interface PredefinedTopic {

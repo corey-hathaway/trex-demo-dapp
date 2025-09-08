@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAccount, useDeployContract, useWaitForTransactionReceipt } from 'wagmi';
-import { defaultComplianceAbi } from '../generated';
+// import { defaultComplianceAbi } from '../generated';
 import { loadDefaultComplianceBytecode } from '../utils/loadContractBytecode';
 
 interface FormData {

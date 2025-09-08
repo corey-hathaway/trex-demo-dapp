@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npx vite",
     "generate": "npx wagmi generate",
-    "build": "npm run generate && npx tsc -b && npx vite build",
+    "build": "npm run generate && npx vite build",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
     "preview": "npx vite preview"

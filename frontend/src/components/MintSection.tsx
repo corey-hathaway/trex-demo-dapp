@@ -15,6 +15,10 @@ export const MintSection: React.FC<MintSectionProps> = ({ onDeployToken, onToken
   const [error, setError] = useState<string | null>(null);
 
   const handleDeploy = async () => {
+    console.log('MintSection - handleDeploy called');
+    console.log('MintSection - walletAddress:', walletAddress);
+    console.log('MintSection - form data:', { assetName, symbol, tokenSupply });
+    
     if (!assetName || !symbol || !tokenSupply) {
       setError('Please fill in all fields');
       return;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAccount, useDeployContract, useWaitForTransactionReceipt } from 'wagmi';
-import { trustedissuersregistryproxyAbi } from '../generated';
+// import { trustedissuersregistryproxyAbi } from '../generated';
 import { loadTrustedIssuersProxyBytecode } from '../utils/loadContractBytecode';
 import { getDeploymentConfig, validateDeploymentConfig } from '../utils/deploymentConfig';
 

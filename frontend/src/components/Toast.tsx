@@ -18,7 +18,7 @@ export const Toast: React.FC<ToastProps> = ({ id, message, type, duration = 5000
   }, [id, duration, onClose]);
 
   const getToastStyles = () => {
-    const baseStyles = "fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 ease-in-out";
+    const baseStyles = "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ease-in-out";
     
     switch (type) {
       case 'success':

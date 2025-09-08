@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPolkadotAuth } from '@polkadot-auth/core';
 import { PolkadotAuthProvider, PolkadotSignInButton, usePolkadotAuth } from '@polkadot-auth/ui';
+import { web3Enable, web3Accounts } from '@polkadot/extension-dapp';
 
 // Type aliases for better readability
 type WalletProvider = any;
@@ -34,6 +35,30 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
     }
   }, [isConnected, address, accountName, session, onConnect]);
 
+  // Check for existing connection on mount
+  useEffect(() => {
+    const checkExistingConnection = async () => {
+      try {
+        const extensions = await web3Enable('T-REX Demo dApp');
+        if (extensions.length === 0) return;
+
+        const accounts = await web3Accounts();
+        if (accounts.length > 0 && !isConnected) {
+          const account = accounts[0];
+          const realAccountName = account.meta.name || `Account ${account.address.slice(0, 6)}...${account.address.slice(-4)}`;
+          
+          if (onConnect) {
+            onConnect(account.address, realAccountName, { account });
+          }
+        }
+      } catch (err) {
+        console.error('Error checking existing connection:', err);
+      }
+    };
+
+    checkExistingConnection();
+  }, [onConnect, isConnected]);
+
   useEffect(() => {
     if (onSignOutReady) {
       onSignOutReady(handleSignOut);
@@ -44,7 +69,29 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
     try {
       setIsConnecting(true);
       setError(null);
+      
+      // Use real Polkadot.js Extension instead of mock signIn
+      const extensions = await web3Enable('T-REX Demo dApp');
+      if (extensions.length === 0) {
+        throw new Error('No Polkadot.js Extension found. Please install the extension.');
+      }
+
+      const accounts = await web3Accounts();
+      if (accounts.length === 0) {
+        throw new Error('No accounts found. Please create an account in the Polkadot.js Extension.');
+      }
+
+      // Use the first account
+      const account = accounts[0];
+      const realAccountName = account.meta.name || `Account ${account.address.slice(0, 6)}...${account.address.slice(-4)}`;
+      
+      // Call the polkadot-sso signIn to maintain the session structure
       await signIn();
+      
+      // Override the mock data with real data
+      if (onConnect) {
+        onConnect(account.address, realAccountName, { account });
+      }
     } catch (err) {
       console.error('Sign in error:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign in');

@@ -274,4 +274,26 @@ router.post('/:id/deploy', async (req, res) => {
   }
 });
 
+// DELETE /api/tokens/clear - Clear all tokens and transactions
+router.delete('/clear', async (req, res) => {
+  try {
+    // Clear transactions first (due to foreign key constraints)
+    await Transaction.destroy({ where: {} });
+    
+    // Clear tokens
+    await Token.destroy({ where: {} });
+    
+    res.json({
+      success: true,
+      message: 'All tokens and transactions cleared successfully'
+    });
+  } catch (error) {
+    console.error('Error clearing data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to clear data'
+    });
+  }
+});
+
 export default router;

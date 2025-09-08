@@ -18,6 +18,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   onWalletConnect, 
   onWalletDisconnect 
 }) => {
+  console.log('Navigation - walletAddress:', walletAddress);
+  console.log('Navigation - walletName:', walletName);
   const [signOutFn, setSignOutFn] = React.useState<(() => Promise<void>) | null>(null);
 
   const formatAddress = (address: string) => {
@@ -43,7 +45,9 @@ export const Navigation: React.FC<NavigationProps> = ({
           <div className="wallet-status">
             {walletAddress ? (
               <div className="wallet-connected">
-                <span className="wallet-address">{walletName || formatAddress(walletAddress)}</span>
+                <span className="wallet-address">
+                  {walletName ? walletName : formatAddress(walletAddress)}
+                </span>
                 <button 
                   className="nav-item disconnect-btn"
                   onClick={handleDisconnect}

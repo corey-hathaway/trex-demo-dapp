@@ -201,6 +201,30 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
     // This could open a modal or navigate to a full transactions list
   };
 
+  const handleClearData = async () => {
+    if (!confirm('Are you sure you want to clear all tokens and transactions? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await apiService.clearAllData();
+      
+      if (response.success) {
+        showSuccess('✅ All data cleared successfully!');
+        // Reload data to show empty state
+        await loadData();
+      } else {
+        showError('Failed to clear data');
+      }
+    } catch (error) {
+      console.error('Error clearing data:', error);
+      showError('Failed to clear data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const nextSlide = () => {
     setCurrentSlide((prev) => {
@@ -430,6 +454,17 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
             onViewAll={handleViewAllTransactions}
           />
         </div>
+      </div>
+
+      {/* Clear Data Button */}
+      <div className="clear-data-section">
+        <button 
+          className="btn-clear-data"
+          onClick={handleClearData}
+          disabled={isLoading}
+        >
+          🗑️ Clear All Data
+        </button>
       </div>
     </div>
   );

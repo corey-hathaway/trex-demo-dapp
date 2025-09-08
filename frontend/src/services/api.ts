@@ -156,6 +156,13 @@ class ApiService {
     });
   }
 
+  // Clear all data
+  async clearAllData(): Promise<{ success: boolean; message: string }> {
+    return this.request('/tokens/clear', {
+      method: 'DELETE',
+    });
+  }
+
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string; version: string }> {
     return this.request('/health', { baseUrl: this.baseUrl.replace('/api', '') });

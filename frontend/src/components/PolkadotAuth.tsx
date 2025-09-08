@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createPolkadotAuth } from '@polkadot-auth/core';
 import { PolkadotAuthProvider, PolkadotSignInButton, usePolkadotAuth } from '@polkadot-auth/ui';
 import { web3Enable, web3Accounts } from '@polkadot/extension-dapp';
@@ -67,7 +67,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
     if (onSignOutReady) {
       onSignOutReady(handleSignOut);
     }
-  }, [onSignOutReady]);
+  }, [onSignOutReady, handleSignOut]);
 
   const handleSignIn = async () => {
     try {
@@ -104,7 +104,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
     }
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     console.log('Disconnect button clicked - starting sign out process');
     try {
       // Call polkadot-sso signOut
@@ -132,7 +132,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
       console.error('Sign out error:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign out');
     }
-  };
+  }, [signOut, onDisconnect, hideConnectedState]);
 
   if (isConnected && address && !hideConnectedState) {
     return (

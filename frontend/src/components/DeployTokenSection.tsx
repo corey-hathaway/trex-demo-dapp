@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 
 interface DeployTokenSectionProps {
   onDeployToken: (tokenData: { name: string; symbol: string; supply: string }) => void;
+  isDeploying?: boolean;
 }
 
-export const DeployTokenSection: React.FC<DeployTokenSectionProps> = ({ onDeployToken }) => {
+export const DeployTokenSection: React.FC<DeployTokenSectionProps> = ({ onDeployToken, isDeploying = false }) => {
   const [formData, setFormData] = useState({
     name: '',
     symbol: '',
@@ -74,8 +75,15 @@ export const DeployTokenSection: React.FC<DeployTokenSectionProps> = ({ onDeploy
           />
         </div>
         
-        <button type="submit" className="deploy-token-btn">
-          Deploy Token
+        <button type="submit" className="deploy-token-btn" disabled={isDeploying}>
+          {isDeploying ? (
+            <>
+              <span className="spinner"></span>
+              Deploying...
+            </>
+          ) : (
+            'Deploy Token'
+          )}
         </button>
       </form>
     </div>

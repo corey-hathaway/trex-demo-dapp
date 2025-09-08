@@ -38,12 +38,17 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
   const [networkTestResult, setNetworkTestResult] = useState<string | null>(null);
   const [deploymentTestResult, setDeploymentTestResult] = useState<string | null>(null);
   const [isTesting, setIsTesting] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
   const { toasts, removeToast, showSuccess, showError } = useToast();
 
   // Reusable function to load data
   const loadData = async () => {
-    if (!walletAddress) return;
+    if (!walletAddress) {
+      console.log('loadData: No wallet address, skipping');
+      return;
+    }
     
+    console.log('loadData: Starting to load data for wallet:', walletAddress);
     setIsLoading(true);
     try {
       // Load tokens for the current wallet
@@ -97,6 +102,8 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
         showError('Please connect your wallet first.');
         return;
       }
+
+      setIsDeploying(true);
 
       // Step 1: Create the token
       const createResponse = await apiService.createToken({
@@ -156,6 +163,8 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
     } catch (error) {
       console.error('Error deploying token:', error);
       showError('Failed to deploy token. Please try again.');
+    } finally {
+      setIsDeploying(false);
     }
   };
 
@@ -213,7 +222,9 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
       if (response.success) {
         showSuccess('✅ All data cleared successfully!');
         // Reload data to show empty state
+        console.log('Clearing data - reloading...');
         await loadData();
+        console.log('Data reloaded after clearing');
       } else {
         showError('Failed to clear data');
       }
@@ -404,7 +415,7 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
             
             {currentSlide === 4 && (
               <div className="carousel-item">
-                <DeployTokenSection onDeployToken={handleDeployToken} />
+                <DeployTokenSection onDeployToken={handleDeployToken} isDeploying={isDeploying} />
               </div>
             )}
           </div>

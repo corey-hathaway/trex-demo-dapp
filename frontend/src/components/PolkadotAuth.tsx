@@ -26,9 +26,11 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
 
   useEffect(() => {
     console.log('PolkadotAuth - Connection state changed:', { isConnected, address, accountName, session: !!session });
-    if (isConnected && address && accountName && session && onConnect) {
-      console.log('PolkadotAuth - Calling onConnect with:', { address, accountName });
-      onConnect(address, accountName, session);
+    if (isConnected && address && session && onConnect) {
+      // Use accountName if available, otherwise use a formatted address as fallback
+      const displayName = accountName || `Account ${address.slice(0, 6)}...${address.slice(-4)}`;
+      console.log('PolkadotAuth - Calling onConnect with:', { address, accountName: displayName });
+      onConnect(address, displayName, session);
     }
   }, [isConnected, address, accountName, session, onConnect]);
 

@@ -1,0 +1,16 @@
+{
+  "name": "trex-shared",
+  "version": "1.0.0",
+  "description": "Shared types and utilities for T-REX Demo",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

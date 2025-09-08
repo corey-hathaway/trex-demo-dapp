@@ -53,3 +53,13 @@ wagmi.config.bundled_*.mjs
 
 # T-REX contract artifacts (these are mock files)
 T-REX/
+
+# Package locks (optional - team decision)
+package-lock.json
+
+# Shared compiled output
+shared/*.js
+shared/*.d.ts
+shared/*.js.map
+shared/*.d.ts.map
+shared/node_modules/

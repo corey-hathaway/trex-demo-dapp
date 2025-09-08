@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePolkadotAuth } from '@polkadot-auth/ui';
+import WalletSelector from './WalletSelector';
 
 // Type aliases for better readability
 type WalletProvider = any;
@@ -22,9 +23,9 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
   console.log('PolkadotAuth - Full authContext:', JSON.stringify(authContext, null, 2));
   
   // Use the correct properties from the polkadot-sso hook
-  const { connect, disconnect, isConnected, address, session, isLoading, error } = authContext || {};
-  console.log('PolkadotAuth - connect:', connect);
-  console.log('PolkadotAuth - disconnect:', disconnect);
+  const { signIn, signOut, isConnected, address, session, isLoading, error } = authContext || {};
+  console.log('PolkadotAuth - signIn:', signIn);
+  console.log('PolkadotAuth - signOut:', signOut);
   console.log('PolkadotAuth - authContext keys:', Object.keys(authContext || {}));
   console.log('PolkadotAuth - isConnected:', isConnected);
   console.log('PolkadotAuth - address:', address);
@@ -68,11 +69,11 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
       
       console.log('PolkadotAuth - Starting real polkadot-sso connection...');
       
-      // Use the real polkadot-sso connect function with Nova wallet support
-      if (connect && typeof connect === 'function') {
+      // Use the real polkadot-sso signIn function with Nova wallet support
+      if (signIn && typeof signIn === 'function') {
         // Try Nova wallet first, then fallback to polkadot-js
-        const result = await connect('nova-wallet');
-        console.log('PolkadotAuth - Real polkadot-sso connect result:', result);
+        const result = await signIn('nova-wallet');
+        console.log('PolkadotAuth - Real polkadot-sso signIn result:', result);
         
         // Check if the hook updated properly after connection
         setTimeout(() => {
@@ -98,10 +99,10 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
           }
         }, 1000);
         
-        console.log('PolkadotAuth - Real polkadot-sso connect successful');
+        console.log('PolkadotAuth - Real polkadot-sso signIn successful');
       } else {
-        console.error('PolkadotAuth - Connect function not available:', { connect, authContext });
-        throw new Error('Connect function not available from polkadot-sso. Available functions: ' + Object.keys(authContext || {}).join(', '));
+        console.error('PolkadotAuth - SignIn function not available:', { signIn, authContext });
+        throw new Error('SignIn function not available from polkadot-sso. Available functions: ' + Object.keys(authContext || {}).join(', '));
       }
     } catch (err) {
       console.error('Sign in error:', err);
@@ -112,27 +113,27 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
   };
 
   const handleSignOut = useCallback(async () => {
-    console.log('PolkadotAuth - handleSignOut called - Using real polkadot-sso disconnect');
+    console.log('PolkadotAuth - handleSignOut called - Using real polkadot-sso signOut');
     
     try {
-      // Use the real polkadot-sso disconnect function
-      if (disconnect && typeof disconnect === 'function') {
-        await disconnect();
-        console.log('PolkadotAuth - Real polkadot-sso disconnect successful');
+      // Use the real polkadot-sso signOut function
+      if (signOut && typeof signOut === 'function') {
+        await signOut();
+        console.log('PolkadotAuth - Real polkadot-sso signOut successful');
       } else {
-        console.log('PolkadotAuth - Disconnect function not available, calling onDisconnect directly');
+        console.log('PolkadotAuth - SignOut function not available, calling onDisconnect directly');
         if (onDisconnect) {
           onDisconnect();
         }
       }
     } catch (err) {
-      console.error('Disconnect error:', err);
+      console.error('SignOut error:', err);
       // Fallback to calling onDisconnect directly
       if (onDisconnect) {
         onDisconnect();
       }
     }
-  }, [disconnect, onDisconnect]);
+  }, [signOut, onDisconnect]);
 
   useEffect(() => {
     console.log('PolkadotAuth - onSignOutReady useEffect triggered');
@@ -173,13 +174,10 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <button
-        onClick={handleSignIn}
-        disabled={isConnecting}
-        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-      >
-        {isConnecting ? 'Connecting...' : 'Connect Nova Wallet'}
-      </button>
+      <WalletSelector 
+        onConnect={onConnect || (() => {})}
+        onDisconnect={onDisconnect || (() => {})}
+      />
       
       {(error || localError) && (
         <div className="text-red-500 text-sm text-center">

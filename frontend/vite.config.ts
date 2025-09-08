@@ -42,7 +42,9 @@ export default defineConfig({
       'path-browserify',
       '@polkadot/extension-dapp',
       '@polkadot/util',
-      '@polkadot/util-crypto'
+      '@polkadot/util-crypto',
+      '@polkadot-auth/core',
+      '@polkadot-auth/ui'
     ],
     exclude: [
       '@noble/hashes',

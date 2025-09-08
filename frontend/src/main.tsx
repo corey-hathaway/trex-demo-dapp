@@ -19,4 +19,3 @@ createRoot(document.getElementById("root")!).render(
     </WagmiProvider>
   </StrictMode>
 );
-  

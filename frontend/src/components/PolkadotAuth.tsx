@@ -22,9 +22,10 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
   console.log('PolkadotAuth - Full authContext:', JSON.stringify(authContext, null, 2));
   
   // Use the correct properties from the polkadot-sso hook
-  const { connect, disconnect, isConnected, address, session, isLoading, error } = authContext;
+  const { connect, disconnect, isConnected, address, session, isLoading, error } = authContext || {};
   console.log('PolkadotAuth - connect:', connect);
   console.log('PolkadotAuth - disconnect:', disconnect);
+  console.log('PolkadotAuth - authContext keys:', Object.keys(authContext || {}));
   console.log('PolkadotAuth - isConnected:', isConnected);
   console.log('PolkadotAuth - address:', address);
   console.log('PolkadotAuth - session:', session);
@@ -99,7 +100,8 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
         
         console.log('PolkadotAuth - Real polkadot-sso connect successful');
       } else {
-        throw new Error('Connect function not available from polkadot-sso');
+        console.error('PolkadotAuth - Connect function not available:', { connect, authContext });
+        throw new Error('Connect function not available from polkadot-sso. Available functions: ' + Object.keys(authContext || {}).join(', '));
       }
     } catch (err) {
       console.error('Sign in error:', err);

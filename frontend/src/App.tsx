@@ -28,9 +28,10 @@ function App() {
 
   return (
     <PolkadotAuthProvider
-      domain="trex-demo-dapp.com"
-      uri="https://trex-demo-dapp.com"
-      defaultChain="polkadot"
+      config={{
+        defaultChain: "polkadot",
+        providers: ["polkadot-js", "talisman", "subwallet", "nova-wallet"]
+      }}
     >
       <div className="app-container">
         {/* Navigation */}

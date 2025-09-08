@@ -30,7 +30,7 @@ function App() {
     <PolkadotAuthProvider
       config={{
         defaultChain: "polkadot",
-        providers: ["polkadot-js", "talisman", "subwallet", "nova-wallet"]
+        providers: ["polkadot-js", "talisman", "subwallet", "nova"]
       }}
     >
       <div className="app-container">

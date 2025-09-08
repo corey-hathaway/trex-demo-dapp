@@ -38,6 +38,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
   
   const [isConnecting, setIsConnecting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [showWalletSelector, setShowWalletSelector] = useState(false);
 
   // Handle connection state changes
   useEffect(() => {
@@ -72,7 +73,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
       // Use the real polkadot-sso signIn function with Nova wallet support
       if (signIn && typeof signIn === 'function') {
         // Try Nova wallet first, then fallback to polkadot-js
-        const result = await signIn('nova-wallet');
+        const result = await signIn('nova');
         console.log('PolkadotAuth - Real polkadot-sso signIn result:', result);
         
         // Check if the hook updated properly after connection
@@ -174,14 +175,41 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <WalletSelector 
-        onConnect={onConnect || (() => {})}
-        onDisconnect={onDisconnect || (() => {})}
-      />
+      <button
+        onClick={() => setShowWalletSelector(true)}
+        disabled={isConnecting}
+        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+      >
+        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+      </button>
       
       {(error || localError) && (
         <div className="text-red-500 text-sm text-center">
           {error || localError}
+        </div>
+      )}
+
+      {/* Wallet Selector Modal */}
+      {showWalletSelector && (
+        <div className="wallet-modal-overlay" onClick={() => setShowWalletSelector(false)}>
+          <div className="wallet-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="wallet-modal-header">
+              <h3>Choose Your Wallet</h3>
+              <button 
+                className="wallet-modal-close"
+                onClick={() => setShowWalletSelector(false)}
+              >
+                ×
+              </button>
+            </div>
+            <WalletSelector 
+              onConnect={(address, accountName, session) => {
+                setShowWalletSelector(false);
+                if (onConnect) onConnect(address, accountName, session);
+              }}
+              onDisconnect={onDisconnect || (() => {})}
+            />
+          </div>
         </div>
       )}
     </div>

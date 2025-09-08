@@ -10,7 +10,7 @@ const WalletSelector: React.FC<WalletSelectorProps> = ({ onConnect, onDisconnect
   const { signIn, isLoading, error } = usePolkadotAuth();
 
   const availableWallets = [
-    { id: 'nova-wallet', name: 'Nova Wallet', icon: '🟠', description: 'Mobile-first Polkadot wallet' },
+    { id: 'nova', name: 'Nova Wallet', icon: '🟠', description: 'Mobile-first Polkadot wallet' },
     { id: 'polkadot-js', name: 'Polkadot.js', icon: '🔴', description: 'Browser extension wallet' },
     { id: 'talisman', name: 'Talisman', icon: '🟣', description: 'Multi-chain wallet' },
     { id: 'subwallet', name: 'SubWallet', icon: '🔵', description: 'Universal wallet' }
@@ -18,6 +18,9 @@ const WalletSelector: React.FC<WalletSelectorProps> = ({ onConnect, onDisconnect
 
   const handleWalletSelect = async (walletId: string) => {
     try {
+      console.log('WalletSelector - Attempting to connect to wallet:', walletId);
+      console.log('WalletSelector - Available signIn function:', signIn);
+      
       if (signIn && typeof signIn === 'function') {
         const result = await signIn(walletId);
         console.log('WalletSelector - Wallet connection result:', result);
@@ -34,11 +37,6 @@ const WalletSelector: React.FC<WalletSelectorProps> = ({ onConnect, onDisconnect
 
   return (
     <div className="wallet-selector">
-      <h3 className="wallet-selector-title">Connect Your Wallet</h3>
-      <p className="wallet-selector-description">
-        Choose from {availableWallets.length} available wallets to connect to T-REX Demo dApp
-      </p>
-
       <div className="wallet-grid">
         {availableWallets.map(wallet => (
           <button

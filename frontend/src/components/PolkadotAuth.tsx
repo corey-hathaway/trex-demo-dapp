@@ -204,7 +204,7 @@ const PolkadotAuth: React.FC<PolkadotAuthProps> = (props) => {
   }
 
   return (
-    <PolkadotAuthProvider config={{}}>
+    <PolkadotAuthProvider config={auth}>
       <PolkadotAuthInner {...props} />
     </PolkadotAuthProvider>
   );

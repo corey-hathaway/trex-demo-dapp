@@ -7,9 +7,10 @@ interface WalletSelectorProps {
 }
 
 const WalletSelector: React.FC<WalletSelectorProps> = ({ onConnect }) => {
-  // Temporary mock state until polkadot-sso is working
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showNovaQr, setShowNovaQr] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
   const availableWallets = [
     { id: 'polkadot-js', name: 'Polkadot.js', icon: '🔴', description: 'Browser extension wallet' },
@@ -43,9 +44,6 @@ const WalletSelector: React.FC<WalletSelectorProps> = ({ onConnect }) => {
     }
   };
 
-  const [showNovaQr, setShowNovaQr] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
-
   const handleNovaWalletConnect = async () => {
     try {
       // Generate a simple QR code for Nova Wallet
@@ -63,7 +61,6 @@ const WalletSelector: React.FC<WalletSelectorProps> = ({ onConnect }) => {
     setShowNovaQr(false);
     onConnect(address, 'Nova Wallet', session);
   };
-
 
   const handleNovaWalletCancel = () => {
     setShowNovaQr(false);

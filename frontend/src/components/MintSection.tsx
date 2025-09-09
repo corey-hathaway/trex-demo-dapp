@@ -80,7 +80,9 @@ Your token is now ready for deployment!`;
 
   return (
     <div className="homepage-section">
-      <h3 className="section-header">Mint</h3>
+      <div className="section-header">
+        <h3>Mint</h3>
+      </div>
       
       {error && (
         <div className="error-message" style={{ 

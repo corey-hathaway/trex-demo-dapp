@@ -55,7 +55,9 @@ export const TransferSection: React.FC<TransferSectionProps> = ({ tokens = [], o
 
   return (
     <div className="homepage-section">
-      <h3 className="section-header">Transfer</h3>
+      <div className="section-header">
+        <h3>Transfer</h3>
+      </div>
       
       <div className="form-group">
         <label htmlFor="tokenAddress" className="form-label">Token Address</label>

@@ -23,6 +23,11 @@ export default defineConfig({
       url: path.resolve(__dirname, 'node_modules/url'),
       querystring: path.resolve(__dirname, 'node_modules/querystring-es3'),
       path: path.resolve(__dirname, 'node_modules/path-browserify'),
+      // Exclude only Node.js specific modules that can't work in browser
+      'ws': false,
+      'ws/browser': false,
+      // Redirect Node.js WebSocket provider to browser version
+      '@polkadot-api/ws-provider/node': '@polkadot-api/ws-provider/web',
     }
   },
   optimizeDeps: {
@@ -38,8 +43,25 @@ export default defineConfig({
       'path-browserify',
       '@polkadot/extension-dapp',
       '@polkadot/util',
-      '@polkadot/util-crypto'
+      '@polkadot/util-crypto',
+      '@polkadot-api/sm-provider',
+      '@polkadot-api/smoldot',
+      '@polkadot-api/ws-provider/web'
+    ],
+    exclude: [
+      'ws',
+      'ws/browser',
+      '@polkadot-api/ws-provider/node'
     ]
+  },
+  build: {
+    rollupOptions: {
+      external: [
+        'ws',
+        'ws/browser',
+        '@polkadot-api/ws-provider/node'
+      ]
+    }
   },
   server: {
     hmr: {

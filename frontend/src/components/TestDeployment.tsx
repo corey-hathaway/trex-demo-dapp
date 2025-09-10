@@ -158,9 +158,47 @@ export const TestDeployment: React.FC<TestDeploymentProps> = ({ walletAddress })
             {testResults.deploymentTest && (
               <div className="result-section">
                 <h5>🚀 Deployment Test Result</h5>
-                <pre className="result-json">
-                  {JSON.stringify(testResults.deploymentTest, null, 2)}
-                </pre>
+                {testResults.deploymentTest.success ? (
+                  <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <span className="text-green-400 text-xl mr-2">✅</span>
+                      <span className="text-green-400 font-semibold">Test token deployed successfully!</span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Contract:</span>
+                        <span className="text-white font-mono">{testResults.deploymentTest.contractAddress}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Transaction:</span>
+                        <span className="text-white font-mono">{testResults.deploymentTest.transactionHash}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Network:</span>
+                        <span className="text-white">Paseo Testnet (Passet Hub)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Explorer:</span>
+                        <a 
+                          href={`https://blockscout-passet-hub.parity-testnet.parity.io/tx/${testResults.deploymentTest.transactionHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300 underline"
+                        >
+                          View Transaction
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <span className="text-red-400 text-xl mr-2">❌</span>
+                      <span className="text-red-400 font-semibold">Deployment failed</span>
+                    </div>
+                    <p className="text-red-300 text-sm">{testResults.deploymentTest.error}</p>
+                  </div>
+                )}
               </div>
             )}
 

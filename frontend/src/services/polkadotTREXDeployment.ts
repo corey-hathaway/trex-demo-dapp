@@ -95,20 +95,34 @@ export class PolkadotTREXDeploymentService {
       console.log('🚀 Starting T-REX token deployment with Polkadot.js Extension...');
       console.log('Token params:', params);
 
+      const startTime = Date.now();
+
       // First check if extension is available
+      console.log('⏱️ Checking extension availability...');
+      const extensionCheckStart = Date.now();
       const extensionCheck = await this.checkExtensionAvailability();
+      console.log(`⏱️ Extension check took: ${Date.now() - extensionCheckStart}ms`);
+      
       if (!extensionCheck.available) {
         throw new Error(extensionCheck.error || 'Polkadot.js Extension not available');
       }
 
       // Get the injected account from the extension
+      console.log('⏱️ Getting injected account...');
+      const accountStart = Date.now();
       const injectedAccount = await this.getInjectedAccount(params.owner);
+      console.log(`⏱️ Account retrieval took: ${Date.now() - accountStart}ms`);
+      
       if (!injectedAccount) {
         throw new Error('Account not found in Polkadot.js Extension. Please connect your wallet.');
       }
 
       // Get the signer from the extension
+      console.log('⏱️ Getting signer from extension...');
+      const signerStart = Date.now();
       const injector = await web3FromAddress(injectedAccount.address);
+      console.log(`⏱️ Signer retrieval took: ${Date.now() - signerStart}ms`);
+      
       if (!injector.signer) {
         throw new Error('Signer not available from Polkadot.js Extension.');
       }
@@ -125,7 +139,10 @@ export class PolkadotTREXDeploymentService {
       console.log('📝 Preparing T-REX Factory deployment transaction...');
       
       // Simulate the deployment steps
+      console.log('⏱️ Starting simulation steps...');
+      const simulationStart = Date.now();
       await this.simulateDeploymentSteps();
+      console.log(`⏱️ Simulation steps took: ${Date.now() - simulationStart}ms`);
 
       // Generate realistic contract address and transaction hash
       const contractAddress = this.generateContractAddress();
@@ -134,6 +151,7 @@ export class PolkadotTREXDeploymentService {
       console.log('✅ T-REX token deployed successfully!');
       console.log('Contract Address:', contractAddress);
       console.log('Transaction Hash:', transactionHash);
+      console.log(`⏱️ Total deployment time: ${Date.now() - startTime}ms`);
 
       return {
         success: true,
@@ -155,13 +173,7 @@ export class PolkadotTREXDeploymentService {
    */
   private async getInjectedAccount(address: string): Promise<InjectedAccountWithMeta | null> {
     try {
-      // Enable the extension
-      const extensions = await web3Enable('T-REX Demo dApp');
-      if (extensions.length === 0) {
-        throw new Error('No Polkadot.js Extension found. Please install it.');
-      }
-
-      // Get all accounts from the extension
+      // Get all accounts from the extension (we already checked availability)
       const accounts = await web3Accounts();
       if (!accounts || accounts.length === 0) {
         throw new Error('No accounts found in Polkadot.js Extension');
@@ -185,16 +197,16 @@ export class PolkadotTREXDeploymentService {
   }
 
   /**
-   * Simulate the deployment steps with fast timing for demo
+   * Simulate the deployment steps with very fast timing for demo
    */
   private async simulateDeploymentSteps(): Promise<void> {
     const steps = [
-      { message: '🔍 Checking T-REX Factory contract on Paseo...', delay: 200 },
-      { message: '📝 Preparing deployment parameters...', delay: 300 },
-      { message: '⛽ Estimating gas costs...', delay: 200 },
-      { message: '✍️ Requesting signature from Polkadot.js Extension...', delay: 500 },
-      { message: '📤 Broadcasting transaction to Paseo testnet...', delay: 400 },
-      { message: '⏳ Waiting for transaction confirmation...', delay: 300 }
+      { message: '🔍 Checking T-REX Factory contract on Paseo...', delay: 100 },
+      { message: '📝 Preparing deployment parameters...', delay: 100 },
+      { message: '⛽ Estimating gas costs...', delay: 100 },
+      { message: '✍️ Requesting signature from Polkadot.js Extension...', delay: 200 },
+      { message: '📤 Broadcasting transaction to Paseo testnet...', delay: 150 },
+      { message: '⏳ Waiting for transaction confirmation...', delay: 100 }
     ];
 
     for (const step of steps) {

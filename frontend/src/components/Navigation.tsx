@@ -18,18 +18,9 @@ export const Navigation: React.FC<NavigationProps> = ({
   onWalletConnect, 
   onWalletDisconnect 
 }) => {
-  console.log('Navigation - walletAddress:', walletAddress);
-  console.log('Navigation - walletName:', walletName);
   const [signOutFn, setSignOutFn] = React.useState<(() => Promise<void>) | null>(null);
 
-  React.useEffect(() => {
-    console.log('Navigation - signOutFn state changed:', signOutFn);
-    console.log('Navigation - signOutFn type:', typeof signOutFn);
-  }, [signOutFn]);
-
   const handleSignOutReady = (fn: () => Promise<void>) => {
-    console.log('Navigation - handleSignOutReady called with:', fn);
-    console.log('Navigation - fn type:', typeof fn);
     setSignOutFn(fn);
   };
 
@@ -38,25 +29,15 @@ export const Navigation: React.FC<NavigationProps> = ({
   };
 
   const handleDisconnect = async () => {
-    console.log('Navigation - handleDisconnect called');
-    console.log('Navigation - signOutFn:', signOutFn);
-    console.log('Navigation - signOutFn type:', typeof signOutFn);
-    
     try {
       if (signOutFn && typeof signOutFn === 'function') {
-        console.log('Navigation - Calling signOutFn...');
         await signOutFn();
-        console.log('Navigation - signOutFn completed');
-      } else {
-        console.log('Navigation - No valid signOutFn available, calling onWalletDisconnect directly');
       }
     } catch (err) {
       console.error('Navigation - Error during signOutFn:', err);
     }
     
-    console.log('Navigation - Calling onWalletDisconnect...');
     onWalletDisconnect();
-    console.log('Navigation - onWalletDisconnect completed');
   };
 
   return (
@@ -72,14 +53,11 @@ export const Navigation: React.FC<NavigationProps> = ({
             {walletAddress ? (
               <div className="wallet-connected">
                 <span className="wallet-address">
-                  {walletName ? walletName : formatAddress(walletAddress)}
+                  {walletName && walletName !== 'Unnamed Account' ? walletName : formatAddress(walletAddress)}
                 </span>
                 <button 
                   className="nav-item disconnect-btn"
-                  onClick={() => {
-                    console.log('Navigation - Disconnect button clicked');
-                    handleDisconnect();
-                  }}
+                  onClick={handleDisconnect}
                 >
                   Disconnect
                 </button>

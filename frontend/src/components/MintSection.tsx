@@ -135,10 +135,11 @@ Your token is now ready for deployment!`;
       
       <button
         onClick={handleDeploy}
-        disabled={isDeploying}
+        disabled={isDeploying || !walletAddress}
         className="btn-primary deploy-token-btn"
+        title={!walletAddress ? 'Please connect a wallet first' : ''}
       >
-        {isDeploying ? 'Deploying...' : 'Deploy Token'}
+        {isDeploying ? 'Deploying...' : 'Mint Token'}
       </button>
     </div>
   );

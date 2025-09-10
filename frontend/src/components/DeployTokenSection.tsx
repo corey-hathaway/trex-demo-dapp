@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 interface DeployTokenSectionProps {
   onDeployToken: (tokenData: { name: string; symbol: string; supply: string }) => void;
   isDeploying?: boolean;
+  walletAddress?: string | null;
 }
 
-export const DeployTokenSection: React.FC<DeployTokenSectionProps> = ({ onDeployToken, isDeploying = false }) => {
+export const DeployTokenSection: React.FC<DeployTokenSectionProps> = ({ onDeployToken, isDeploying = false, walletAddress }) => {
   const [formData, setFormData] = useState({
     name: '',
     symbol: '',
@@ -75,7 +76,12 @@ export const DeployTokenSection: React.FC<DeployTokenSectionProps> = ({ onDeploy
           />
         </div>
         
-        <button type="submit" className="deploy-token-btn" disabled={isDeploying}>
+        <button 
+          type="submit" 
+          className="deploy-token-btn" 
+          disabled={isDeploying || !walletAddress}
+          title={!walletAddress ? 'Please connect a wallet first' : ''}
+        >
           {isDeploying ? (
             <>
               <span className="spinner"></span>

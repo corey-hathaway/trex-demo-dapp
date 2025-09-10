@@ -11,9 +11,10 @@ interface Token {
 interface TransferSectionProps {
   tokens?: Token[];
   onTransfer?: (transferData: { tokenAddress: string; recipient: string; amount: string }) => void;
+  walletAddress?: string | null;
 }
 
-export const TransferSection: React.FC<TransferSectionProps> = ({ tokens = [], onTransfer }) => {
+export const TransferSection: React.FC<TransferSectionProps> = ({ tokens = [], onTransfer, walletAddress }) => {
   const [selectedToken, setSelectedToken] = useState('');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
@@ -102,8 +103,9 @@ export const TransferSection: React.FC<TransferSectionProps> = ({ tokens = [], o
       
       <button
         onClick={handleTransfer}
-        disabled={isTransferring}
+        disabled={isTransferring || !walletAddress}
         className="btn-primary transfer-token-btn"
+        title={!walletAddress ? 'Please connect a wallet first' : ''}
       >
         {isTransferring ? 'Transferring...' : 'Transfer Token'}
       </button>

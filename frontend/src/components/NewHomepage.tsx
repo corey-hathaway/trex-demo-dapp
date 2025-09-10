@@ -313,15 +313,6 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
         <p>Deploy ERC-3643 compliant security tokens on Polkadot with Tokeny's regulatory framework.</p>
       </div>
 
-      {/* Test Menu Button */}
-      <div className="test-menu-section">
-        <button 
-          className="test-menu-btn"
-          onClick={() => setShowTestMenu(!showTestMenu)}
-        >
-          🧪 Test Menu {showTestMenu ? '▼' : '▶'}
-        </button>
-      </div>
 
       {/* Test Menu */}
       {showTestMenu && (
@@ -400,7 +391,7 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
       {/* Main Action Cards */}
       <div className="main-action-cards">
         <div className="action-card">
-          <DeployTokenSection onDeployToken={handleDeployToken} isDeploying={isDeploying} />
+          <DeployTokenSection onDeployToken={handleDeployToken} isDeploying={isDeploying} walletAddress={walletAddress} />
         </div>
         
         <div className="action-card">
@@ -408,7 +399,7 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
         </div>
         
         <div className="action-card">
-          <TransferSection tokens={tokens} onTransfer={handleTransfer} />
+          <TransferSection tokens={tokens} onTransfer={handleTransfer} walletAddress={walletAddress} />
         </div>
       </div>
 
@@ -431,8 +422,15 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
         </div>
       </div>
 
-      {/* Clear Data Button */}
-      <div className="clear-data-section">
+      {/* Bottom Action Buttons */}
+      <div className="bottom-actions-section">
+        <button 
+          className="test-menu-btn"
+          onClick={() => setShowTestMenu(!showTestMenu)}
+        >
+          🧪 Test Menu {showTestMenu ? '▼' : '▶'}
+        </button>
+        
         <button 
           className="btn-clear-data"
           onClick={handleClearData}

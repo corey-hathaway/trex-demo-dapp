@@ -9,6 +9,7 @@ import { dirname, join } from 'path';
 // Import routes
 import tokenRoutes from './routes/tokens.js';
 import transactionRoutes from './routes/transactions.js';
+import telegramAuthRoutes from './routes/telegramAuth.js';
 
 // Load environment variables
 dotenv.config();
@@ -88,6 +89,7 @@ app.get('/cors-test', (req, res) => {
 // API routes
 app.use('/api/tokens', tokenRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/auth/telegram', telegramAuthRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -406,79 +406,87 @@
 }
 
 .test-menu-btn {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: #6366f1;
   color: white;
   border: none;
   padding: 12px 24px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 180px;
+  text-align: center;
 }
 
-.test-menu-btn:hover {
+.test-menu-btn:hover:not(:disabled) {
+  background: #4f46e5;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .test-menu {
   margin: 24px 0;
-  padding: 24px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .test-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .test-card {
-  background: white;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
 .test-card-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .test-card-header p {
-  margin: 0 0 20px 0;
-  color: #64748b;
-  font-size: 14px;
+  margin: 0 0 1.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 .test-btn {
   width: 100%;
-  padding: 12px 24px;
-  background: #3b82f6;
+  padding: 0.75rem 1.5rem;
+  background: var(--accent-color);
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .test-btn:hover:not(:disabled) {
-  background: #2563eb;
+  background: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.test-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .test-btn:disabled {
@@ -1865,6 +1873,35 @@ html {
   padding: 0.5rem 0;
 }
 
+/* Telegram SSO Button */
+.telegram-sso-btn {
+  background: #6366f1 !important;
+  color: white !important;
+  border: none !important;
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  min-width: 180px !important;
+  justify-content: center !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.telegram-sso-btn:hover:not(:disabled) {
+  background: #4f46e5 !important;
+  transform: translateY(-1px) !important;
+}
+
+.telegram-sso-btn:disabled {
+  background: #ccc !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
 /* Clear Data Section (legacy - keeping for compatibility) */
 .clear-data-section {
   display: flex;
@@ -1874,21 +1911,22 @@ html {
 }
 
 .btn-clear-data {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: #ef4444;
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.9rem;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  transition: all 0.2s;
+  min-width: 180px;
+  text-align: center;
 }
 
 .btn-clear-data:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  background: #dc2626;
+  transform: translateY(-1px);
 }
 
 .btn-clear-data:disabled {

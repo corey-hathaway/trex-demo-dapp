@@ -38,6 +38,7 @@ export class PolkadotTREXDeploymentService {
   }> {
     try {
       const extensions = await web3Enable('T-REX Demo dApp');
+      
       if (extensions.length === 0) {
         return {
           available: false,
@@ -60,10 +61,11 @@ export class PolkadotTREXDeploymentService {
         accounts: accounts.map(acc => acc.address)
       };
     } catch (error) {
+      console.error('Extension availability check failed:', error);
       return {
         available: false,
         accounts: [],
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Extension check failed'
       };
     }
   }
@@ -183,16 +185,16 @@ export class PolkadotTREXDeploymentService {
   }
 
   /**
-   * Simulate the deployment steps with realistic timing
+   * Simulate the deployment steps with fast timing for demo
    */
   private async simulateDeploymentSteps(): Promise<void> {
     const steps = [
-      { message: '🔍 Checking T-REX Factory contract on Paseo...', delay: 1000 },
-      { message: '📝 Preparing deployment parameters...', delay: 1500 },
-      { message: '⛽ Estimating gas costs...', delay: 1000 },
-      { message: '✍️ Requesting signature from Polkadot.js Extension...', delay: 2000 },
-      { message: '📤 Broadcasting transaction to Paseo testnet...', delay: 3000 },
-      { message: '⏳ Waiting for transaction confirmation...', delay: 2000 }
+      { message: '🔍 Checking T-REX Factory contract on Paseo...', delay: 200 },
+      { message: '📝 Preparing deployment parameters...', delay: 300 },
+      { message: '⛽ Estimating gas costs...', delay: 200 },
+      { message: '✍️ Requesting signature from Polkadot.js Extension...', delay: 500 },
+      { message: '📤 Broadcasting transaction to Paseo testnet...', delay: 400 },
+      { message: '⏳ Waiting for transaction confirmation...', delay: 300 }
     ];
 
     for (const step of steps) {

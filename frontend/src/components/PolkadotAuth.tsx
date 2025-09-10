@@ -87,7 +87,21 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
     try {
       // Use the real polkadot-sso disconnect function
       if (disconnect && typeof disconnect === 'function') {
+        console.log('🔌 Attempting disconnect...');
         await disconnect();
+        
+        // For Polkadot.js extension, sometimes we need to call disconnect twice
+        // Wait a moment and try again if still connected
+        setTimeout(async () => {
+          if (isConnected) {
+            console.log('🔌 Still connected, attempting second disconnect...');
+            try {
+              await disconnect();
+            } catch (err) {
+              console.log('🔌 Second disconnect completed');
+            }
+          }
+        }, 300);
       } else {
         if (onDisconnect) {
           onDisconnect();
@@ -100,7 +114,7 @@ const PolkadotAuthInner: React.FC<PolkadotAuthProps> = ({ onConnect, onDisconnec
         onDisconnect();
       }
     }
-  }, [disconnect, onDisconnect]);
+  }, [disconnect, onDisconnect, isConnected]);
 
   useEffect(() => {
     if (onSignOutReady && !hasCalledOnSignOutReady.current) {

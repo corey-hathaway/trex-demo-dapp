@@ -8,6 +8,8 @@ import { ToastContainer } from './ToastContainer';
 import { useToast } from '../hooks/useToast';
 import { apiService, Token as ApiToken, Transaction as ApiTransaction } from '../services/api';
 import { polkadotTREXDeploymentService } from '../services/polkadotTREXDeployment';
+import { TelegramAuthButton } from '@polkadot-auth/ui';
+import { TelegramQRData } from '@polkadot-auth/telegram';
 
 interface Token {
   name: string;
@@ -39,6 +41,8 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
   const [isTesting, setIsTesting] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const [showTestMenu, setShowTestMenu] = useState(false);
+  const [telegramSession, setTelegramSession] = useState<any>(null);
+  const [telegramQRData, setTelegramQRData] = useState<TelegramQRData | null>(null);
   const { toasts, removeToast, showSuccess, showError } = useToast();
 
   // Reusable function to load data
@@ -236,6 +240,23 @@ export const NewHomepage: React.FC<NewHomepageProps> = ({ walletAddress }) => {
     }
   };
 
+  // Telegram SSO handlers
+  const handleTelegramAuthStart = (challengeId: string) => {
+    console.log('Telegram authentication started:', challengeId);
+    // Removed toast notification to avoid interfering with bot interaction
+  };
+
+  const handleTelegramAuthSuccess = (address: string, session: any) => {
+    console.log('Telegram authentication successful:', { address, session });
+    setTelegramSession(session);
+    showSuccess(`✅ Successfully signed in with Telegram! Address: ${address.slice(0, 10)}...`);
+  };
+
+  const handleTelegramAuthError = (error: string) => {
+    console.error('Telegram authentication error:', error);
+    showError(`❌ Telegram authentication failed: ${error}`);
+  };
+
 
   // Test functions
   const handleNetworkTest = async () => {
@@ -314,6 +335,40 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
       </div>
 
 
+      {/* Main Action Cards */}
+      <div className="main-action-cards">
+        <div className="action-card">
+          <DeployTokenSection onDeployToken={handleDeployToken} isDeploying={isDeploying} walletAddress={walletAddress} />
+        </div>
+        
+        <div className="action-card">
+          <MintSection onDeployToken={handleDeployToken} onTokenCreated={loadData} walletAddress={walletAddress} />
+        </div>
+        
+        <div className="action-card">
+          <TransferSection tokens={tokens} onTransfer={handleTransfer} walletAddress={walletAddress} />
+        </div>
+      </div>
+
+
+      {/* Bottom Grid - Your Tokens and Transactions */}
+      <div className="homepage-grid bottom-grid">
+        <div className="grid-item">
+          <YourTokensSection 
+            tokens={tokens} 
+            onViewToken={handleViewToken}
+            onViewAll={handleViewAllTokens}
+          />
+        </div>
+        
+        <div className="grid-item">
+          <TransactionsSection 
+            transactions={transactions}
+            onViewAll={handleViewAllTransactions}
+          />
+        </div>
+      </div>
+
       {/* Test Menu */}
       {showTestMenu && (
         <div className="test-menu">
@@ -388,40 +443,6 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
         </div>
       )}
 
-      {/* Main Action Cards */}
-      <div className="main-action-cards">
-        <div className="action-card">
-          <DeployTokenSection onDeployToken={handleDeployToken} isDeploying={isDeploying} walletAddress={walletAddress} />
-        </div>
-        
-        <div className="action-card">
-          <MintSection onDeployToken={handleDeployToken} onTokenCreated={loadData} walletAddress={walletAddress} />
-        </div>
-        
-        <div className="action-card">
-          <TransferSection tokens={tokens} onTransfer={handleTransfer} walletAddress={walletAddress} />
-        </div>
-      </div>
-
-
-      {/* Bottom Grid - Your Tokens and Transactions */}
-      <div className="homepage-grid bottom-grid">
-        <div className="grid-item">
-          <YourTokensSection 
-            tokens={tokens} 
-            onViewToken={handleViewToken}
-            onViewAll={handleViewAllTokens}
-          />
-        </div>
-        
-        <div className="grid-item">
-          <TransactionsSection 
-            transactions={transactions}
-            onViewAll={handleViewAllTransactions}
-          />
-        </div>
-      </div>
-
       {/* Bottom Action Buttons */}
       <div className="bottom-actions-section">
         <button 
@@ -430,6 +451,15 @@ Explorer: https://blockscout-passet-hub.parity-testnet.parity.io/tx/${deployment
         >
           🧪 Test Menu {showTestMenu ? '▼' : '▶'}
         </button>
+        
+        <TelegramAuthButton
+          onAuthStart={handleTelegramAuthStart}
+          onAuthSuccess={handleTelegramAuthSuccess}
+          onAuthError={handleTelegramAuthError}
+          className="telegram-sso-btn"
+        >
+          Sign In with TG
+        </TelegramAuthButton>
         
         <button 
           className="btn-clear-data"
